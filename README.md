@@ -34,10 +34,17 @@ How to Use
 call this program from the command line or via command batchfile using the following syntax. For details on modes see STM8 bootloader manual on STM homepage.
 
 usage: STM8_serial_flasher [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]
-  -h    print this help
-  -p    name of communication port (default: list all ports and query)
-  -b    communication baudrate in Baud (default: 115200)
-  -r    use LIN reply mode
-  -f    name of hexfile to flash (default: none)
-  -j    don't jump to flash after upload
-  -q    don't prompt for <return> prior to exit
+
+-h    print this help
+
+-p    name of communication port (default: list all ports and query)
+
+-b    communication baudrate in Baud (default: 115200)
+
+-r    use LIN reply mode
+
+-f    name of hexfile to flash (default: none)
+
+-j    don't jump to flash after upload
+
+-q    don't prompt for <return> prior to exit
