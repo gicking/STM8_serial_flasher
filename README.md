@@ -1,8 +1,40 @@
 STM8_serial_flasher
-===================
+-------------------
 
-PC tool for uplading hexfiles to the STM8 microcontroller via COM port or USB using the built-in ROM bootloader of the STM8. 
+PC tool for uplading hexfiles to the STM8 microcontroller via COM port or USB using the built-in ROM bootloader of the STM8.
 
-Works under Windows, MacOSX and Linux operating systems. 
+Works under Windows, MacOSX and Linux operating systems.
 
-The tool includes some STM8 code by STMicroelectronics (STM), which is required for programming the flash. This code was copied from the freely available "Flash Loader Demonstrator" by STM. Rights to this STM8 code remain with STM.
+The tool includes some STM8 code by STMicroelectronics (STM), which is required for programming the flash. This code was copied from the freely available "Flash Loader Demonstrator" by STM. Rights to the contained STM8 code remain with STM.
+
+====================================
+
+Revision History
+----------------
+
+2014-12-21: initial release by Georg Icking-Konert under the Apache License 2.0
+
+====================================
+
+How to Compile
+--------------
+
+Windows: open file "STM_BSL_flasher.dev" with DevCpp and compile
+
+Posix (e.g. MacOSX or Linux): type "make" in project directory
+
+====================================
+
+How to Use
+----------
+
+call this program from the command line or via command batchfile using the following syntax. For details on modes see STM8 bootloader manual on STM homepage.
+
+usage: STM8_serial_flasher [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]
+  -h    print this help
+  -p    name of communication port (default: list all ports and query)
+  -b    communication baudrate in Baud (default: 115200)
+  -r    use LIN reply mode
+  -f    name of hexfile to flash (default: none)
+  -j    don't jump to flash after upload
+  -q    don't prompt for <return> prior to exit
