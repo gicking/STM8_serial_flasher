@@ -35,16 +35,16 @@ call this program from the command line or via command batchfile using the follo
 
 usage: STM8_serial_flasher [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]
 
--h    print this help
+  -h    print this help
 
--p    name of communication port (default: list all ports and query)
+  -p    name of communication port (default: list all ports and query)
 
--b    communication baudrate in Baud (default: 115200)
+  -b    communication baudrate in Baud (default: 115200)
 
--r    use LIN reply mode
+  -r    use LIN reply mode
 
--f    name of hexfile to flash (default: none)
+  -f    name of hexfile to flash (default: none)
 
--j    don't jump to flash after upload
+  -j    don't jump to flash after upload
 
--q    don't prompt for <return> prior to exit
+  -q    don't prompt for <return> prior to exit
