@@ -1,7 +1,7 @@
 /**
   \file serial_comm.h
    
-  \author G. Icking-Konert (Robert Bosch GmbH; AE/EMH4)
+  \author G. Icking-Konert
   \date 2009-03-01
   \version 0.1
    
