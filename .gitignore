@@ -27,3 +27,18 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Others
+.DS_Store
+*.rel
+*.asm
+*.lst
+*.rst
+*.sym
+*.map
+*.lk
+*.dep
+*.pdb
+*.wdb
+*.wed
+STM8_serial_flasher*
