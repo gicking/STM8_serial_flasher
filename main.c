@@ -88,6 +88,7 @@ int main(int argc, char ** argv) {
   char      portname[STRLEN];     // name of communication port
   int       baudrate;             // communication baudrate [Baud]
   uint8_t   LINmode;              // use normal UART or LIN reply mode 
+  uint8_t   enableBSL;            // don't enable ROM bootloader after upload (caution!)
   uint8_t   jumpFlash;            // jump to flash after upload
   int       flashsize;            // size of flash (kB) for w/e routines
   uint8_t   versBSL;              // BSL version for w/e routines
@@ -106,9 +107,10 @@ int main(int argc, char ** argv) {
   
   // initialize default arguments
   sprintf(portname, "");        // no default port name
-  baudrate  = 115200;           // default baudrate
-  LINmode   = 0;                // use normal UART mode 
-  jumpFlash = 1;                // jump to flash after uploade
+  baudrate   = 115200;          // default baudrate
+  LINmode    = 0;               // use normal UART mode 
+  jumpFlash  = 1;               // jump to flash after uploade
+  enableBSL  = 1;               // enable bootloader after upload
   sprintf(hexfile, "");         // no default hexfile
   
   // for debugging only
@@ -140,6 +142,10 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-f"))
       strncpy(hexfile, argv[++i], STRLEN-1);
 
+    // don't enable ROM bootloader after upload (caution!)
+    else if (!strcmp(argv[i], "-x"))
+      enableBSL = 0;
+
     // don't jump to address after upload
     else if (!strcmp(argv[i], "-j"))
       jumpFlash = 0;
@@ -163,6 +169,7 @@ int main(int argc, char ** argv) {
       printf("  -b    communication baudrate in Baud (default: 115200)\n");
       printf("  -r    use LIN reply mode\n");
       printf("  -f    name of hexfile to flash (default: none)\n");
+      printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j    don't jump to flash after upload\n");
       printf("  -q    don't prompt for <return> prior to exit\n");
       printf("\n");
@@ -292,6 +299,14 @@ int main(int argc, char ** argv) {
   //imageStart = 0x8000;  numBytes = 128*1024;   // complete 128kB flash
   //imageStart = 0x00A0;  numBytes = 352;        // RAM
   //bsl_memRead(ptrPort, LINmode, 1, imageStart, numBytes, image);
+  
+  
+  // enable ROM bootloader after upload
+  if (enableBSL==1) {
+    //bsl_activateBSL(ptrPort, LINmode, 1);
+    printf("enable bootloader: ");
+    bsl_memWrite(ptrPort, LINmode, 1,  0x487E, 2, (char*)"\x55\xAA");
+  }
   
   // jump to flash start address after upload
   if (jumpFlash)

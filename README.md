@@ -45,6 +45,8 @@ usage: STM8_serial_flasher [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]
 
   -f    name of hexfile to flash (default: none)
 
+  -x    don't enable ROM bootloader after upload (default: enable)
+      
   -j    don't jump to flash after upload
 
   -q    don't prompt for <return> prior to exit
