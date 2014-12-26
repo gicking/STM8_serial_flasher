@@ -28,6 +28,13 @@
 *.x86_64
 *.hex
 
+# Doxygen output
+./doxygen/html
+./doxygen/latex
+./doxygen/man
+./doxygen/rtf
+./doxygen/xml
+
 # Others
 .DS_Store
 *.rel

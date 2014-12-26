@@ -17,6 +17,6 @@
 #define _MAIN_H_
 
 // version number (float)
-#define VERSION 0.1
+#define VERSION 1.0
 
 #endif // _MAIN_H_

@@ -15,16 +15,24 @@ The tool includes some STM8 code by STM, which is required for programming the f
 Revision History
 ----------------
 
-2014-12-21: initial release by Georg Icking-Konert under the Apache License 2.0
+1.0 (2014-12-21): initial release by Georg Icking-Konert under the Apache License 2.0
 
 ====================================
 
 How to Compile
 --------------
 
-Windows: open file "STM_BSL_flasher.dev" with DevCpp and compile
+Windows: open file "STM_BSL_flasher.dev" with DevCpp and compile. Alternatively double-click '_compile.bat' (requires gcc and mingw32-make to be in PATH)
 
-Posix (e.g. MacOSX or Linux): type "make" in project directory
+Posix (e.g. MacOSX or Linux): type "make" in project directory. Alternatively double-click '_compile.command' (requires gcc and make to be in PATH)
+
+====================================
+
+How to generate Reference
+--------------
+
+run Doxygen (www.doxygen.org) with input file 'Doxyfile'. Then open './doxygen/html/index.html'. For other output formats, e.g. PDF modify
+'Doxyfile' accordingly.
 
 ====================================
 

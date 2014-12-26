@@ -7,7 +7,7 @@ cd `dirname $0`
 echo off
 clear
 
-# make hexfile
+# make application
 make -f Makefile
 
 echo "press key to close window...\c"
