@@ -106,12 +106,12 @@ int main(int argc, char ** argv) {
   g_pauseOnExit = 1;            // wait for <return> before terminating
   
   // initialize default arguments
-  sprintf(portname, "");        // no default port name
+  portname[0] = '\0';           // no default port name
   baudrate   = 115200;          // default baudrate
   LINmode    = 0;               // use normal UART mode 
   jumpFlash  = 1;               // jump to flash after uploade
   enableBSL  = 1;               // enable bootloader after upload
-  sprintf(hexfile, "");         // no default hexfile
+  hexfile[0] = '\0';            // no default hexfile
   
   // for debugging only
   //sprintf(portname, "/dev/tty.usbserial-A4009I0O");
@@ -183,7 +183,7 @@ int main(int argc, char ** argv) {
   // print message
   ////////
   printf("\n");
-  printf("STM8/STM32 Flash Uploader (version %1.1f)\n", VERSION);
+  printf("STM8 Serial Flasher (v%1.1f)\n", VERSION);
   
   
   ////////
@@ -319,6 +319,9 @@ int main(int argc, char ** argv) {
   close_port(&ptrPort);
   printf("done with program\n");
   Exit(0, g_pauseOnExit);
+  
+  // avoid compiler warnings
+  return(0);
   
 } // main
 

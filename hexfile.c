@@ -143,7 +143,7 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
   uint8_t   type, len, chkRead, chkCalc;
-  uint32_t  addr, addrMin, addrMax, num, val;
+  uint32_t  addr, addrMin, addrMax, val;
   
   // print message (if present, strip path)
   if (verbose) {
@@ -236,7 +236,6 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   
   // 2nd run: store data to image
   if (*numBytes != 0) {
-    num = 0;
     p = buf;
     while (get_line(&p, line)) {
     
@@ -320,7 +319,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
   uint8_t   type, len, chkRead, chkCalc;
-  uint32_t  addr, addrMin, addrMax, addrOff, num, val;
+  uint32_t  addr, addrMin, addrMax, addrOff, val;
   
   // print message (if present, strip path)
   if (verbose) {
@@ -432,7 +431,6 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   // 2nd run: store data to image
   addrOff = 0x00000000;
   if (*numBytes != 0) {
-    num = 0;
     p = buf;
     while (get_line(&p, line)) {
     

@@ -10,7 +10,8 @@ clear
 # make hexfile
 make -f Makefile clean
 
-# also delete other output folders
+# delete doxygen output
+rm -fr ./doxygen/.DS_Store
 rm -fr ./doxygen/html
 rm -fr ./doxygen/latex
 rm -fr ./doxygen/man

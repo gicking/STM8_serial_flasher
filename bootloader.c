@@ -381,8 +381,7 @@ uint8_t bsl_getInfo(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, int *flash
 */
 uint8_t bsl_memRead(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, uint32_t addrStart, uint32_t numBytes, char *buf) {
 
-  int       i, count;
-  int       lenTx, lenRx, len;
+  int       i, lenTx, lenRx, len;
   char      Tx[1000], Rx[1000];
   uint32_t  addrTmp, addrStep, idx=0;
 
@@ -417,7 +416,6 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, uint32_t a
 
 
   // loop over addresses in <=256B steps
-  count = 0;
   idx = 0;
   addrStep = 256;
   for (addrTmp=addrStart; addrTmp<addrStart+numBytes; addrTmp+=addrStep) {  
@@ -863,8 +861,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, uint32_
 */
 uint8_t bsl_memWrite(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, uint32_t addrStart, uint32_t numBytes, char *buf) {
 
-  int       i, count;
-  int       lenTx, lenRx, len;
+  int       i, lenTx, lenRx, len;
   char      Tx[1000], Rx[1000];
   uint32_t  addrTmp, addrStep, idx=0;
   uint8_t   chk;
@@ -896,7 +893,6 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint8_t LINmode, uint8_t verbose, uint32_t 
 
 
   // loop over addresses in <=128B steps
-  count = 0;
   idx = 0;
   addrStep = 128;
   for (addrTmp=addrStart; addrTmp<addrStart+numBytes; addrTmp+=addrStep) {
