@@ -10,10 +10,9 @@ Notes:
     - for a virgin device this is automatically the case
     - uploading code via STM8_serial_flasher activates the BSL by default (see 'usage')
     - for other devices the BSL can be enabled via the free "ST Visual Programmer“ tool (Windows only) by STM
-  - the STM8 bootloader protocol is described in application note UM0560, wich is available from the STM homepage
   - this software includes some RAM code by STM, which is required for flash programming. This code was copied from the freely available "Flash Loader Demonstrator" by STM. All rights of this RAM code remain with STM.
 
-For more details see the Wiki under https://github.com/gicking/STM8_serial_flasher/wiki
+For more details and a description how to build and use, see the Wiki under https://github.com/gicking/STM8_serial_flasher/wiki
 
 ====================================
 
