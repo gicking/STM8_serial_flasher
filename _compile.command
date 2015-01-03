@@ -10,6 +10,7 @@ clear
 # make application
 make -f Makefile
 
+echo " "
 read -p "press key to close window..."
 echo on
 

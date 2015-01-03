@@ -7,7 +7,7 @@ cd `dirname $0`
 echo off
 clear
 
-# make hexfile
+# use makefile to delete gcc output
 make -f Makefile clean
 
 # delete DevC++ output
@@ -25,6 +25,7 @@ rm -f .\.DS_Store
 rm -f .\doxygen\.DS_Store
 rm -f .\STM8_Routines\.DS_Store
 
+echo " "
 read -p "press key to close window..."
 echo on
 
