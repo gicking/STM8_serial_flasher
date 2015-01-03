@@ -78,7 +78,7 @@ void list_ports(void) {
     i = 1;
     while((ent = readdir(dir)) != NULL) {
       
-      // FTDI FT232 based USB-RS232 adapter
+      // FTDI FT232 based USB-RS232 adapter (MacOS X)
       if (strstr(ent->d_name, "tty.usbserial")) {
         if (i!=1) printf(", ");
         printf("/dev/%s", ent->d_name);
@@ -91,11 +91,18 @@ void list_ports(void) {
         printf("/dev/%s", ent->d_name);
         i++;
       }
+      
+      // FTDI FT232 based USB-RS232 adapter (Ubuntu)
+      if (strstr(ent->d_name, "ttyUSB")) {
+        if (i!=1) printf(", ");
+        printf("/dev/%s", ent->d_name);
+        i++;
+      }
 
     }
   }
   else {
-    fprintf(stderr, "cannot list, see /dev/tty.*");
+    fprintf(stderr, "cannot list, see /dev/tty*");
   }
   fflush(stdout);
 

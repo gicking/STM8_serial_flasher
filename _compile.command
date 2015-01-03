@@ -1,4 +1,4 @@
-#!/bin/tcsh 
+#!/bin/bash 
 
 # change to current working directory
 cd `dirname $0`
@@ -10,6 +10,6 @@ clear
 # make application
 make -f Makefile
 
-echo "press key to close window...\c"
-set dummy = $<
+read -p "press key to close window..."
 echo on
+

@@ -163,17 +163,17 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p COMx] [-b BR] [-r] [-f hexfile] [-j] [-q]\n\n", appname);
       printf("  -h    print this help\n");
       printf("  -p    name of communication port (default: list all ports and query)\n");
       printf("  -b    communication baudrate in Baud (default: 115200)\n");
-      printf("  -r    use LIN reply mode\n");
+      printf("  -r    use LIN reply mode (default: off)\n");
       printf("  -f    name of hexfile to flash (default: none)\n");
       printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
-      printf("  -j    don't jump to flash after upload\n");
-      printf("  -q    don't prompt for <return> prior to exit\n");
+      printf("  -j    don't jump to flash after upload (default: jump to flash)\n");
+      printf("  -q    don't prompt for <return> prior to exit (default: prompt)\n");
       printf("\n");
-      Exit(0, g_pauseOnExit);
+      Exit(0, 0);
     }
 
   } // process commandline arguments
