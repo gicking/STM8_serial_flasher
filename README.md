@@ -12,7 +12,7 @@ Notes:
     - for other devices the BSL can be enabled via the free "ST Visual Programmer“ tool (Windows only) by STM
   - this software includes some RAM code by STM, which is required for flash programming. This code was copied from the freely available "Flash Loader Demonstrator" by STM. All rights of this RAM code remain with STM.
 
-For more details and a description how to build and use, see the Wiki under https://github.com/gicking/STM8_serial_flasher/wiki
+For more details and instructions on building and using the tool see the Wiki under https://github.com/gicking/STM8_serial_flasher/wiki
 
 ====================================
 
@@ -20,45 +20,3 @@ Revision History
 ----------------
 
 1.0 (2014-12-21): initial release by Georg Icking-Konert under the Apache License 2.0
-
-====================================
-
-How to Compile
---------------
-
-Windows: open file "STM_BSL_flasher.dev" with DevCpp and compile. Alternatively double-click '_compile.bat' (requires gcc and mingw32-make to be in PATH)
-
-Posix (e.g. MacOSX or Linux): type "make" in project directory. Alternatively double-click '_compile.command' (requires gcc and make to be in PATH)
-
-====================================
-
-How to generate Reference
---------------
-
-run Doxygen (www.doxygen.org) with input file 'Doxyfile'. Then open './doxygen/html/index.html'. For other output formats, e.g. PDF modify
-'Doxyfile' accordingly.
-
-====================================
-
-How to Use
-----------
-
-call this program from the command line or via command batchfile using the following syntax. For details on modes see STM8 bootloader manual on STM homepage.
-
-usage: STM8_serial_flasher [-h] [-p COMx] [-b BR] [r] [-f hexfile] [-j] [-q]
-
-  -h    print this help
-
-  -p    name of communication port (default: list all ports and query)
-
-  -b    communication baudrate in Baud (default: 115200)
-
-  -r    use LIN reply mode
-
-  -f    name of hexfile to flash (default: none)
-
-  -x    don't enable ROM bootloader after upload (default: enable)
-      
-  -j    don't jump to flash after upload
-
-  -q    don't prompt for <return> prior to exit
