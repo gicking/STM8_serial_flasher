@@ -14,6 +14,11 @@ Notes:
 
 For more details and instructions on building and using the tool see the Wiki under https://github.com/gicking/STM8_serial_flasher/wiki
 
+If you find any bugs or for feature requests, please send me a note.
+
+Have fun!
+Georg
+
 ====================================
 
 Revision History

@@ -21,6 +21,7 @@ rd /S /Q  .\doxygen\xml
 REM delete other output
 DEL .\.DS_Store
 DEL .\doxygen\.DS_Store
+DEL .\doxygen\images\.DS_Store
 DEL .\STM8_Routines\.DS_Store
 
 echo on

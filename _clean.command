@@ -21,9 +21,10 @@ rm -fr ./doxygen/rtf
 rm -fr ./doxygen/xml
 
 # delete other output
-rm -f .\.DS_Store
-rm -f .\doxygen\.DS_Store
-rm -f .\STM8_Routines\.DS_Store
+rm -f ./.DS_Store
+rm -f ./doxygen/.DS_Store
+rm -f ./doxygen/images/.DS_Store
+rm -f ./STM8_Routines/.DS_Store
 
 echo " "
 read -p "press key to close window..."

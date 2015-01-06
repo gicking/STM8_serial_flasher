@@ -304,7 +304,6 @@ int main(int argc, char ** argv) {
   // enable ROM bootloader after upload
   if (enableBSL==1) {
     //bsl_activateBSL(ptrPort, LINmode, 1);
-    printf("enable bootloader: ");
     bsl_memWrite(ptrPort, LINmode, 1,  0x487E, 2, (char*)"\x55\xAA");
   }
   
