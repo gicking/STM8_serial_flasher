@@ -163,12 +163,12 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p COMx] [-b BR] [-r] [-f hexfile] [-j] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p COMx] [-b BR] [-r] [-f file] [-x] [-j] [-q]\n\n", appname);
       printf("  -h    print this help\n");
       printf("  -p    name of communication port (default: list all ports and query)\n");
       printf("  -b    communication baudrate in Baud (default: 115200)\n");
       printf("  -r    use LIN reply mode (default: off)\n");
-      printf("  -f    name of hexfile to flash (default: none)\n");
+      printf("  -f    name of s19 or intel-hex file to flash (default: none)\n");
       printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j    don't jump to flash after upload (default: jump to flash)\n");
       printf("  -q    don't prompt for <return> prior to exit (default: prompt)\n");
@@ -259,11 +259,12 @@ int main(int argc, char ** argv) {
     Exit(1, g_pauseOnExit);
   }
   
-  // convert to memory image
+  // convert device dependent flash routines to memory image
   convert_s19(ptr, &imageStart, &numBytes, image, 0);
 
   // upload flash routines to RAM
   bsl_memWrite(ptrPort, LINmode, 0, imageStart, numBytes, image);
+
 
   // if specified import & upload hexfile
   if (strlen(hexfile)>0) {
@@ -272,9 +273,9 @@ int main(int argc, char ** argv) {
     load_hexfile(hexfile, buf, BUFSIZE);
     
     // convert to memory image, depending on file type
-    if (strstr(hexfile, ".s19") != NULL)
+    if (strstr(hexfile, ".s19") != NULL)                                              // Motorola S-record format
       convert_s19(buf, &imageStart, &numBytes, image, 1);
-    else if (strstr(hexfile, ".hex") != NULL)
+    else if ((strstr(hexfile, ".hex") != NULL) || (strstr(hexfile, ".ihx") != NULL))  // Intel HEX-format
       convert_hex(buf, &imageStart, &numBytes, image, 1);
     else {
       fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
