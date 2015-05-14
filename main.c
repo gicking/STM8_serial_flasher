@@ -201,11 +201,19 @@ int main(int argc, char ** argv) {
   ////////
   // open port with given properties
   ////////
+  if (1) {
+    printf("  open port with %gkBaud ... ", (float) baudrate / 1000.0);
+    fflush(stdout);
+  }
   if (LINmode)
     ptrPort = init_port(portname, baudrate, 1000, 8, 0, 1, 0, 0);   // use no parity
-  else  
+  else 
     ptrPort = init_port(portname, baudrate, 1000, 8, 2, 1, 0, 0);   // use even parity
-
+  if (1) {
+    printf("ok\n");
+    fflush(stdout);
+  }
+  
 
   ////////
   // open port with given properties
