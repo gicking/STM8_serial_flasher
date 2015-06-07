@@ -90,6 +90,7 @@ int main(int argc, char ** argv) {
   uint8_t   LINmode;              // use normal UART or LIN reply mode 
   uint8_t   enableBSL;            // don't enable ROM bootloader after upload (caution!)
   uint8_t   jumpFlash;            // jump to flash after upload
+  uint8_t   pauseOnLaunch;        // prompt for <return> prior to upload
   int       flashsize;            // size of flash (kB) for w/e routines
   uint8_t   versBSL;              // BSL version for w/e routines
   char      hexfile[STRLEN];      // name of file to flash
@@ -107,9 +108,10 @@ int main(int argc, char ** argv) {
   
   // initialize default arguments
   portname[0] = '\0';           // no default port name
-  baudrate   = 115200;          // default baudrate
+  baudrate   = 250000;          // default baudrate
   LINmode    = 0;               // use normal UART mode 
   jumpFlash  = 1;               // jump to flash after uploade
+  pauseOnLaunch = 0;            // do not prompt for return prior to upload
   enableBSL  = 1;               // enable bootloader after upload
   hexfile[0] = '\0';            // no default hexfile
   
@@ -150,6 +152,10 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-j"))
       jumpFlash = 0;
 
+    // prompt for <return> prior to upload
+    else if (!strcmp(argv[i], "-Q"))
+      pauseOnLaunch = 1;
+
     // don't prompt for <return> prior to exit
     else if (!strcmp(argv[i], "-q"))
       g_pauseOnExit = 0;
@@ -163,14 +169,15 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p COMx] [-b BR] [-r] [-f file] [-x] [-j] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p COMx] [-b BR] [-r] [-f file] [-x] [-j] [-Q] [-q]\n\n", appname);
       printf("  -h    print this help\n");
       printf("  -p    name of communication port (default: list all ports and query)\n");
-      printf("  -b    communication baudrate in Baud (default: 115200)\n");
+      printf("  -b    communication baudrate in Baud (default: 250000)\n");
       printf("  -r    use LIN reply mode (default: off)\n");
       printf("  -f    name of s19 or intel-hex file to flash (default: none)\n");
       printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j    don't jump to flash after upload (default: jump to flash)\n");
+      printf("  -Q    prompt for <return> prior to upload (default: no prompt)\n");
       printf("  -q    don't prompt for <return> prior to exit (default: prompt)\n");
       printf("\n");
       Exit(0, 0);
@@ -199,6 +206,17 @@ int main(int argc, char ** argv) {
 
 
   ////////
+  // put STM8 into bootloader mode
+  ////////
+  if (pauseOnLaunch) {
+    printf("\n\nset STM8 into bootloader mode and press <return>\n");
+    fflush(stdout);
+    fflush(stdin);
+    getchar();
+  }
+
+
+  ////////
   // open port with given properties
   ////////
   if (1) {
@@ -216,7 +234,7 @@ int main(int argc, char ** argv) {
   
 
   ////////
-  // open port with given properties
+  // communicate with STM8 bootloader
   ////////
 
   // synchronize baudrate
