@@ -42,6 +42,9 @@
 /// wait for \<return\> prior to closing console window
 global uint8_t        g_pauseOnExit;
 
+/// bootloader UART mode and interface: 0=duplex, 1=1-wire reply, 2=2-wire reply
+global uint8_t        g_UARTmode;
+
 
 // undefine global again
 #undef global

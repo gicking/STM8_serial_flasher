@@ -24,10 +24,10 @@ char  *get_line(char **buf, char *line);
 void  load_hexfile(char *filename, char *buf, uint32_t bufsize);
 
 // convert s19 format in memory buffer to memory image
-void  convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose);
+void  convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image);
 
 // convert intel hex format in memory buffer to memory image
-void  convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose);
+void  convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image);
 
 #endif // _HEXFILE_H_
 

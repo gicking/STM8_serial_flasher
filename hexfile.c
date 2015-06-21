@@ -93,6 +93,7 @@ void load_hexfile(char *filename, char *buf, uint32_t bufsize) {
   
   // open file to read
   if (!(fp = fopen(filename, "rb"))) {
+    setConsoleColor(PRM_COLOR_RED);
     fprintf(stderr, "\n\nerror in 'load_hexfile()': cannot open file, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
@@ -125,7 +126,7 @@ void load_hexfile(char *filename, char *buf, uint32_t bufsize) {
   
 
 /**
-   \fn void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose)
+   \fn void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image)
    
    \brief convert s19 format in memory buffer to memory image
    
@@ -133,12 +134,11 @@ void load_hexfile(char *filename, char *buf, uint32_t bufsize) {
    \param[out] addrStart  start address of image (=lowest address in hexfile)
    \param[out] numBytes   number of bytes in image
    \param[out] image      RAM image of hexfile
-   \param[in] verbose     level of verbosity and if application exits on fail 
    
    convert memory buffer containing s19 hexfile to memory buffer. For description of 
    Motorola S19 file format see http://en.wikipedia.org/wiki/SREC_(file_format)
 */
-void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose) {
+void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image) {
   
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
@@ -146,10 +146,10 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   uint32_t  addr, addrMin, addrMax, val;
   
   // print message (if present, strip path)
-  if (verbose) {
-    printf("  convert s19 ... ");
-    fflush(stdout);
-  }
+  /*
+  printf("  convert s19 ... ");
+  fflush(stdout);
+  */
   
   // 1st run: check syntax and extract min/max addresses
   linecount = 0;
@@ -164,6 +164,7 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     
     // check 1st char (must be 'S')
     if (line[0] != 'S') {
+      setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror in 'convert_s19()': line %d does not start with 'S', exit!\n\n", linecount);
       Exit(1, g_pauseOnExit);
     }
@@ -214,6 +215,7 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     // assert checksum (0xFF xor (sum over all except record type)
     chkCalc ^= 0xFF;                 // invert checksum
     if (chkCalc != chkRead) {
+      setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror in 'convert_s19()': line %d has wrong checksum (0x%02x vs. 0x%02x), exit!\n\n", linecount, chkRead, chkCalc);
       Exit(1, g_pauseOnExit);
     }
@@ -286,22 +288,22 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   */
   
   // print message
-  if (verbose) {
-    if ((*numBytes)>2048)
-      printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
-    else if ((*numBytes)>0)
-      printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
-    else
-      printf("done, no data read\n");
-    fflush(stdout);
-  }
+  /*
+  if ((*numBytes)>2048)
+    printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
+  else if ((*numBytes)>0)
+    printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
+  else
+    printf("done, no data read\n");
+  fflush(stdout);
+  */
   
 } // convert_s19
 
   
 
 /**
-   \fn void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose)
+   \fn void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image)
    
    \brief convert intel hex format in memory buffer to memory image
    
@@ -309,12 +311,11 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
    \param[out] addrStart  start address of image (=lowest address in hexfile)
    \param[out] numBytes   number of bytes in image
    \param[out] image      RAM image of hexfile
-   \param[in] verbose     level of verbosity and if application exits on fail 
    
    convert memory buffer containing intel hexfile to memory buffer. For description of 
    Intel hex file format see http://en.wikipedia.org/wiki/Intel_HEX
 */
-void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image, uint8_t verbose) {
+void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image) {
   
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
@@ -322,10 +323,10 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   uint32_t  addr, addrMin, addrMax, addrOff, val;
   
   // print message (if present, strip path)
-  if (verbose) {
-    printf("  convert hex ... ");
-    fflush(stdout);
-  }
+  /*
+  printf("  convert hex ... ");
+  fflush(stdout);
+  */
   
   // 1st run: check syntax and extract min/max addresses
   linecount = 0;
@@ -341,6 +342,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     
     // check 1st char (must be ':')
     if (line[0] != ':') {
+      setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror in 'convert_hex()': line %d does not start with 'S', exit!\n\n", linecount);
       Exit(1, g_pauseOnExit);
     }
@@ -395,6 +397,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     } // type==4
     
     else {
+      setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has unsupported type %d, exit!\n\n", linecount, type);
       Exit(1, g_pauseOnExit);
     }
@@ -408,6 +411,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     // assert checksum (0xFF xor (sum over all except record type)
     chkCalc = 255 - chkCalc + 1;                 // calculate 2-complement
     if (chkCalc != chkRead) {
+      setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has wrong checksum (0x%02x vs. 0x%02x), exit!\n\n", linecount, chkRead, chkCalc);
       Exit(1, g_pauseOnExit);
     }
@@ -478,6 +482,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
       } // type==4
     
       else {
+        setConsoleColor(PRM_COLOR_RED);
         fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has unsupported type %d, exit!\n\n", linecount, type);
         Exit(1, g_pauseOnExit);
       }
@@ -495,15 +500,15 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   */
   
   // print message
-  if (verbose) {
-    if ((*numBytes)>2048)
-      printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
-    else if ((*numBytes)>0)
-      printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
-    else
-      printf("done, no data read\n");
-    fflush(stdout);
-  }
+  /*
+  if ((*numBytes)>2048)
+    printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
+  else if ((*numBytes)>0)
+    printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
+  else
+    printf("done, no data read\n");
+  fflush(stdout);
+  */
   
 } // convert_hex
 

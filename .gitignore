@@ -49,4 +49,3 @@ doxygen/xml/*
 *.pdb
 *.wdb
 *.wed
-STM8_serial_flasher*
