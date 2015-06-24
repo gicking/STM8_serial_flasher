@@ -8,8 +8,9 @@ set MAKE=mingw32-make
 REM use SDCC makefile to delete output
 %MAKE% -f Makefile clean
 
-REM delete DevC++ output
-rd /S /Q  .\Objects
+REM delete DevC++ objects. Keep Objects folder
+rd /S /Q .\Objects
+mkdir .\Objects
 
 REM delete doxygen output
 rd /S /Q  .\doxygen\html

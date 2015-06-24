@@ -3,8 +3,8 @@
 # Output files are generated in a directory with name of device.
 #######################
 
-DEVICE=stm8s105
-#DEVICE=stm8s207
+DEVICE=STM8S105
+#DEVICE=STM8S207
 
 # define compiler (has to be in PATH)
 CC = sdcc
@@ -15,7 +15,6 @@ LFLAGS = -mstm8 -lstm8 $(OPTIMIZE) --out-fmt-ihx
 OBJDIR = $(DEVICE)
 OBJECTS = $(patsubst %.c, $(OBJDIR)/%.rel, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
-
 
 # set defaults 
 TARGET=$(OBJDIR)/main.ihx
@@ -48,11 +47,12 @@ clean:
 	rm -fr Debug
 
 # upload via stm8flash / SWIM (https://github.com/vdudouyt/stm8flash)
-stm8flash:
-	stm8flash -c stlink -p $(DEVICE) -w $(TARGET)
+# stm8flash requires device in lower-case -> http://gnu-make.2324884.n4.nabble.com/how-to-achieve-conversion-to-uppercase-td14496.html 
+swim:
+	stm8flash -c stlink -w $(TARGET) -p $(shell echo $(DEVICE) | tr A-Z a-z)
 
 serial:
-ifeq ($(DEVICE),stm8s105)
+ifeq ($(DEVICE),STM8S105)
 	../STM8_serial_flasher -p /dev/ttyAMA0 -f $(TARGET) -q -Q -r -u 2
 else
 	../STM8_serial_flasher -p /dev/ttyUSB0 -f $(TARGET) -q
