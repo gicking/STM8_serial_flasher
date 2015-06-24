@@ -49,3 +49,7 @@ doxygen/xml/*
 *.pdb
 *.wdb
 *.wed
+
+*.cdb
+
+*.ihx

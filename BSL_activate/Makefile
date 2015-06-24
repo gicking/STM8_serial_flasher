@@ -3,8 +3,15 @@
 # Output files are generated in a directory with name of device.
 #######################
 
-DEVICE=STM8S105
-#DEVICE=STM8S207
+DEVICE = STM8S105
+#DEVICE = STM8S207
+
+# comm port for serial flasher. For STM8S Discovery Board use UART
+ifeq ($(DEVICE),STM8S105)
+	PORT = /dev/ttyAMA0
+else
+	PORT = /dev/ttyUSB0
+endif	
 
 # define compiler (has to be in PATH)
 CC = sdcc
@@ -52,9 +59,9 @@ swim:
 	stm8flash -c stlink -w $(TARGET) -p $(shell echo $(DEVICE) | tr A-Z a-z)
 
 serial:
-ifeq ($(DEVICE),STM8S105)
-	../STM8_serial_flasher -p /dev/ttyAMA0 -f $(TARGET) -q -Q -r -u 2
+ifeq ($(PORT),/dev/ttyAMA0)
+	../STM8_serial_flasher -p $(PORT) -f $(TARGET) -q -Q -r -u 2
 else
-	../STM8_serial_flasher -p /dev/ttyUSB0 -f $(TARGET) -q
+	../STM8_serial_flasher -p $(PORT) -f $(TARGET) -q
 endif	
 
