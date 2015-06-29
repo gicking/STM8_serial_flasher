@@ -81,7 +81,7 @@ uint8_t bsl_sync(HANDLE ptrPort) {
     
     //printf("test %d\n", count);
     
-  } while ((count<10) && ((len!=lenRx) || ((Rx[0]!=ACK) && (Rx[0]!=NACK))));
+  } while ((count<15) && ((len!=lenRx) || ((Rx[0]!=ACK) && (Rx[0]!=NACK))));
   
   // check if ok
   if ((len==lenRx) && (Rx[0]==ACK)) {

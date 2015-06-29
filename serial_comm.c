@@ -1108,8 +1108,9 @@ uint32_t send_port(HANDLE fpCom, uint32_t lenTx, char *Tx) {
       fprintf(stderr, "\n\nerror in 'send_port()': read 1-wire echo failed, exit!\n\n");
       Exit(1, g_pauseOnExit);
     }
+    //fprintf(stderr,"received echo %dB 0x%02x\n", (int) lenRx, Rx[0]);
   }
-
+  
   // return number of sent bytes
   return((uint32_t) numChars);
 
@@ -1126,7 +1127,7 @@ uint32_t send_port(HANDLE fpCom, uint32_t lenTx, char *Tx) {
   \param[in]  lenRx   number of bytes to receive
   \param[out] Rx      array containing bytes received
   
-  \return         number of received bytes
+  \return number of received bytes
   
   receive data via comm port. Use this function to facilitate serial communication
   on different platforms, e.g. Win32 and Posix
@@ -1166,7 +1167,6 @@ uint32_t receive_port(HANDLE fpCom, uint32_t lenRx, char *Rx) {
     ReadFile(fpCom, Rx, lenRx, &numChars, NULL);
   }
   
-  
   // return number of bytes received
   return((uint32_t) numChars);
 
@@ -1179,7 +1179,7 @@ uint32_t receive_port(HANDLE fpCom, uint32_t lenRx, char *Rx) {
 #if defined(__APPLE__) || defined(__unix__) 
 
   char            *dest = Rx;
-  uint32_t        remaining = lenRx, got = 0;
+  uint32_t        remaining = lenRx, got = 0, received = 0;
   struct          timeval tv;
   fd_set          fdr;
   struct termios  toptions;
@@ -1206,7 +1206,7 @@ uint32_t receive_port(HANDLE fpCom, uint32_t lenRx, char *Rx) {
     FD_ZERO(&fdr);
     FD_SET(fpCom, &fdr);
     if (select(fpCom + 1, &fdr, NULL, NULL, &tv) != 1) {
-      return(lenRx-remaining);
+      return(received);
     }
 
     // read a response, we know there's data waiting
@@ -1217,23 +1217,27 @@ uint32_t receive_port(HANDLE fpCom, uint32_t lenRx, char *Rx) {
       if (errno == EAGAIN)
         continue;
       else
-        return(lenRx-remaining);
+        return(received);
     } 
     else if (got > 0) {
+      
+      // for UART reply mode with 2-wire interface echo each byte
+      if (g_UARTmode==2) {
+        //fprintf(stderr,"sent echo %dB 0x%02x\n", (int) lenRx, Rx[0]);
+        send_port(fpCom, 1, dest);
+      }
+      
       // figure out how many bytes are left and increment dest pointer through buffer
       dest += got;
       remaining -= got;
-      
-      // for UART reply mode with 2-wire interface echo each byte
-      if (g_UARTmode==2)
-        send_port(fpCom, 1, dest);
+      received += got;
       
     } // received bytes
 
   } // while (remaining != 0)
 
   // return number of received bytes
-  return(lenRx);
+  return(received);
   
 #endif // __APPLE__ || __unix__
 

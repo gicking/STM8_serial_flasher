@@ -287,11 +287,12 @@ int main(int argc, char ** argv) {
     // non-Raspi -> reset via DTR line
 #else
     printf("  reset via DTR ... ");
-    //xxxpulse_DTR(ptrPort, 10);
+    pulse_DTR(ptrPort, 10);
     printf("done\n");
 #endif
   }
   SLEEP(50);
+  
   
   // synchronize baudrate
   bsl_sync(ptrPort);
