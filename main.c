@@ -388,8 +388,11 @@ int main(int argc, char ** argv) {
   
   
   // enable ROM bootloader after upload (option bytes always on same address)
-  if (enableBSL==1)
+  if (enableBSL==1) {
+    printf("  activate bootloader ... ");
     bsl_memWrite(ptrPort, 0x487E, 2, (char*)"\x55\xAA", 0);
+    printf("done\n");
+  }
   
   // jump to flash start address after upload (reset vector always on same address)
   if (jumpFlash)
