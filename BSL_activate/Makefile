@@ -58,6 +58,7 @@ clean:
 swim:
 	stm8flash -c stlink -w $(TARGET) -p $(shell echo $(DEVICE) | tr A-Z a-z)
 
+# upload via UART bootloader (https://github.com/gicking/STM8_serial_flasher)
 serial:
 ifeq ($(PORT),/dev/ttyAMA0)
 	../STM8_serial_flasher -p $(PORT) -f $(TARGET) -q -Q -r -u 2
