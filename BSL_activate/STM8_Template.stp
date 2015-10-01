@@ -185,28 +185,28 @@ String.8.0=
 
 [Root.Config.1.Settings.6]
 String.2.0=Running Linker
-String.3.0=clnk $(ToolsetLibOpts) -o $(OutputPath)$(TargetSName).sm8 -fakeInteger -fakeFloat -fakeOutFile$(ProjectSFile).elf -fakeRunConv -fakeStartupcrtsi.sm8 -fakeAutoGen -fakeVectFilestm8_interrupt_vector.c -customMapFile -customMapFile-m$(OutputPath)$(TargetSName).map -customMapAddress -customCfgFile$(OutputPath)$(TargetSName).lkf 
-String.3.1=cvdwarf $(OutputPath)$(TargetSName).sm8 -fakeVectAddr0x8000
+String.3.0=clnk $(ToolsetLibOpts) -o $(OutputPath)$(TargetSName).sm8 -fakeOutFile$(ProjectSFile).elf -fakeRunConv -fakeStartupcrtsi.sm8 -fakeAutoGen -fakeVectFilestm8_interrupt_vector.c -fakeVectAddr0x8000 -customMapFile -customMapFile-m$(OutputPath)$(TargetSName).map -customMapAddress -customCfgFile$(OutputPath)$(TargetSName).lkf 
+String.3.1=cvdwarf $(OutputPath)$(TargetSName).sm8
 String.4.0=$(OutputPath)$(TargetFName)
-String.5.0=
-String.6.0=2015,4,18,18,13,21
+String.5.0=$(OutputPath)$(ProjectSFile).elf $(OutputPath)$(TargetSName).map
+String.6.0=2015,7,1,15,49,52
 String.100.0=
 String.101.0=crtsi.st7
-String.102.0=+seg .const -b 0x8080 -m 0x7f80 -n .const -it 
-String.102.1=+seg .text -a .const -n .text 
-String.102.2=+seg .eeprom -b 0x4000 -m 0x400 -n .eeprom 
-String.102.3=+seg .bsct -b 0x0 -m 0x100 -n .bsct 
-String.102.4=+seg .ubsct -a .bsct -n .ubsct 
-String.102.5=+seg .bit -a .ubsct -n .bit -id 
-String.102.6=+seg .share -a .bit -n .share -is 
-String.102.7=+seg .data -b 0x100 -m 0x500 -n .data 
+String.102.0=+seg .const -b 0x8080 -m 0x7f80 -n .const -it
+String.102.1=+seg .text -a .const -n .text
+String.102.2=+seg .eeprom -b 0x4000 -m 0x400 -n .eeprom
+String.102.3=+seg .bsct -b 0x0 -m 0x100 -n .bsct
+String.102.4=+seg .ubsct -a .bsct -n .ubsct
+String.102.5=+seg .bit -a .ubsct -n .bit -id
+String.102.6=+seg .share -a .bit -n .share -is
+String.102.7=+seg .data -b 0x100 -m 0x500 -n .data
 String.102.8=+seg .bss -a .data -n .bss
 String.103.0=Code,Constants[0x8080-0xffff]=.const,.text
 String.103.1=Eeprom[0x4000-0x43ff]=.eeprom
 String.103.2=Zero Page[0x0-0xff]=.bsct,.ubsct,.bit,.share
 String.103.3=Ram[0x100-0x5ff]=.data,.bss
 String.104.0=0x7ff
-String.105.0=libfsl.sm8;libisl.sm8;libm.sm8
+String.105.0=libm.sm8
 Int.0=0
 Int.1=0
 
@@ -222,7 +222,7 @@ String.6.0=2010,2,26,16,13,37
 [Root.Source Files]
 ElemType=Folder
 PathName=Source Files
-Child=Root.Source Files.globals.h
+Child=Root.Source Files.flash.c
 Config.0=Root.Source Files.Config.0
 Config.1=Root.Source Files.Config.1
 
@@ -291,6 +291,16 @@ String.3.0=
 String.4.0=
 String.5.0=
 String.6.0=2010,2,26,16,13,37
+
+[Root.Source Files.flash.c]
+ElemType=File
+PathName=flash.c
+Next=Root.Source Files.flash.h
+
+[Root.Source Files.flash.h]
+ElemType=File
+PathName=flash.h
+Next=Root.Source Files.globals.h
 
 [Root.Source Files.globals.h]
 ElemType=File

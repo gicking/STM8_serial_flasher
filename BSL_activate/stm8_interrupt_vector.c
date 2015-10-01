@@ -6,7 +6,6 @@
 
 // declaration of below ISR handler
 typedef void @far (*interrupt_handler_t)(void);
-@near @interrupt void TIM4_ISR(void);
 
 struct interrupt_vector {
 	unsigned char interrupt_instruction;
@@ -47,7 +46,7 @@ struct interrupt_vector const _vectab[] = {
  	{0x82, NonHandledInterrupt},                    /* irq20 - UART2 Tx interrupt */
 	{0x82, NonHandledInterrupt},                    /* irq21 - UART2 Rx interrupt */
   {0x82, NonHandledInterrupt},                    /* irq22 - ADC1 end of conversion/Analog watchdog interrupts */
-	{0x82, (interrupt_handler_t) TIM4_ISR},         /* irq23 - Timer 4 interrupt */
+	{0x82, NonHandledInterrupt},                    /* irq23 - Timer 4 interrupt */
 	{0x82, NonHandledInterrupt},                    /* irq24 - FLASH interrupt */
 	{0x82, NonHandledInterrupt},                    /* irq25 - Reserved */
 	{0x82, NonHandledInterrupt},                    /* irq26 - Reserved */

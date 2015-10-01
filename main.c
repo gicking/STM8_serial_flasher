@@ -196,7 +196,7 @@ int main(int argc, char ** argv) {
       printf("  -r    reset STM8 via DTR line (USB/RS232) or pin GPIO18 (Raspi) (default: skip)\n");
       printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j    don't jump to flash after upload (default: jump to flash)\n");
-      printf("  -Q    prompt for <return> prior to upload (default: prompt)\n");
+      printf("  -Q    don't prompt for <return> prior to upload (default: prompt)\n");
       printf("  -q    don't prompt for <return> prior to exit (default: prompt)\n");
       printf("\n");
       Exit(0, 0);
@@ -205,7 +205,7 @@ int main(int argc, char ** argv) {
   } // process commandline arguments
   
   
-  
+
   ////////
   // print app name & version, and change console title
   ////////

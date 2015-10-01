@@ -755,16 +755,16 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
 
   int       i, lenTx, lenRx, len;
   char      Tx[1000], Rx[1000];
-  uint32_t  addrTmp, addrStep, idx=0;
-  uint8_t   chk;
+  uint32_t  addrTmp, addrStep, idx=0, idx2=0;
+  uint8_t   chk, flagEmpty;
 
 
   // print message
   if (verbose) {
     if (numBytes > 2048)
-      printf("  upload %1.1fkB of %1.1fkB to 0x%04x ", (float) idx/1024.0, (float) numBytes/1024.0, (int) addrStart);
+      printf("  upload %1.1fkB starting at 0x%04x ", (float) idx2/1024.0, (int) addrStart);
     else
-      printf("  upload %dB of %dB to 0x%04x ", idx, numBytes, (int) addrStart);
+      printf("  upload %dB starting at 0x%04x ", idx2, (int) addrStart);
     fflush(stdout);
   }
   
@@ -782,6 +782,7 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
 
   // loop over addresses in <=128B steps
   idx = 0;
+  idx2 = 0;
   addrStep = 128;
   for (addrTmp=addrStart; addrTmp<addrStart+numBytes; addrTmp+=addrStep) {
   
@@ -789,7 +790,20 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
     if (addrTmp+128 > addrStart+numBytes)
       addrStep = addrStart+numBytes-addrTmp;
 
+    // check if next block contains data. If not, skip complete block
+    flagEmpty = 1;
+    for (i=0; i<addrStep; i++) {
+      if (buf[idx+i]) {
+        flagEmpty = 0;
+        break;
+      }
+    }
+    if (flagEmpty) {
+      idx += addrStep;
+      continue;
+    }
       
+
     /////
     // send write command
     /////
@@ -871,6 +885,7 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
     chk         = addrStep-1;
     for (i=0; i<addrStep; i++) {
       Tx[lenTx] = buf[idx++];
+      idx2++;                     // only used for printing
       chk ^= Tx[lenTx];
       lenTx++;
     }
@@ -902,11 +917,11 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
     }
     
     // print progress
-    if (((idx % 1024) == 0) && (verbose)){
+    if (((idx2 % 1024) == 0) && (verbose)){
       if (numBytes > 2048)
-        printf("%c  upload %1.1fkB of %1.1fkB to 0x%04x ", '\r', (float) idx/1024.0, (float) numBytes/1024.0, (int) addrStart);
+        printf("%c  upload %1.1fkB starting at 0x%04x ", '\r', (float) idx2/1024.0, (int) addrStart);
       else
-        printf("%c  upload %dB of %dB to 0x%04x ", '\r', idx, numBytes, (int) addrStart);
+        printf("%c  upload %dB starting at 0x%04x ", '\r', idx2, (int) addrStart);
       fflush(stdout);
     }
 
@@ -915,9 +930,9 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
   // print message
   if (verbose) {
     if (numBytes > 2048)
-      printf("%c  upload %1.1fkB to 0x%04x ", '\r', (float) idx/1024.0, (int) addrStart);
+      printf("%c  upload %1.1fkB starting at 0x%04x ", '\r', (float) idx2/1024.0, (int) addrStart);
     else
-      printf("%c  upload %dB to 0x%04x ", '\r', idx, (int) addrStart);
+      printf("%c  upload %dB starting at 0x%04x ", '\r', idx2, (int) addrStart);
     printf("done                \n");
     fflush(stdout);
   }
