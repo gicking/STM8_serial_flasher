@@ -89,7 +89,7 @@ int main(int argc, char ** argv) {
   char      *appname;             // name of application without path
   char      portname[STRLEN];     // name of communication port
   int       baudrate;             // communication baudrate [Baud]
-  uint8_t   resetSTM8;            // reset STM8 via DTR (RS232/USB) or GPIO18 (Raspi)
+  uint8_t   resetSTM8;            // 0=no reset; 1=HW reset via DTR (RS232/USB) or GPIO18 (Raspi); 2=SW reset by sending 0x55+0xAA
   uint8_t   enableBSL;            // don't enable ROM bootloader after upload (caution!)
   uint8_t   jumpFlash;            // jump to flash after upload
   uint8_t   pauseOnLaunch;        // prompt for <return> prior to upload
@@ -158,10 +158,12 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-f"))
       strncpy(hexfile, argv[++i], STRLEN-1);
 
-    // reset STM8 via DTR line (RS232/USB) or GPIO18 (Raspi only)
-    else if (!strcmp(argv[i], "-r"))
-      resetSTM8 = 1;
-
+    // HW reset STM8 via DTR line (RS232/USB) or GPIO18 (Raspi only)
+    else if (!strcmp(argv[i], "-r")) {
+      sscanf(argv[++i], "%d", &j);
+      resetSTM8 = j;
+    }
+    
     // don't enable ROM bootloader after upload (caution!)
     else if (!strcmp(argv[i], "-x"))
       enableBSL = 0;
@@ -188,16 +190,20 @@ int main(int argc, char ** argv) {
         appname = argv[0];
       printf("\n");
       printf("usage: %s [-h] [-p COMx] [-b BR] [-u mode] [-f file] [-r] [-x] [-j] [-Q] [-q]\n\n", appname);
-      printf("  -h    print this help\n");
-      printf("  -p    name of communication port (default: list all ports and query)\n");
-      printf("  -b    communication baudrate in Baud (default: 230400)\n");
-      printf("  -u    UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
-      printf("  -f    name of s19 or intel-hex file to flash (default: none)\n");
-      printf("  -r    reset STM8 via DTR line (USB/RS232) or pin GPIO18 (Raspi) (default: skip)\n");
-      printf("  -x    don't enable ROM bootloader after upload (default: enable)\n");
-      printf("  -j    don't jump to flash after upload (default: jump to flash)\n");
-      printf("  -Q    don't prompt for <return> prior to upload (default: prompt)\n");
-      printf("  -q    don't prompt for <return> prior to exit (default: prompt)\n");
+      printf("  -h        print this help\n");
+      printf("  -p name   name of communication port (default: list all ports and query)\n");
+      printf("  -b baud   communication baudrate in Baud (default: 230400)\n");
+      printf("  -u N      UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
+      printf("  -f file   name of s19 or intel-hex file to flash (default: none)\n");
+      #ifdef __ARMEL__
+        printf("  -r rst    reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
+      #else
+        printf("  -r rst    reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
+      #endif
+      printf("  -x        don't enable ROM bootloader after upload (default: enable)\n");
+      printf("  -j        don't jump to flash after upload (default: jump to flash)\n");
+      printf("  -Q        don't prompt for <return> prior to upload (default: prompt)\n");
+      printf("  -q        don't prompt for <return> prior to exit (default: prompt)\n");
       printf("\n");
       Exit(0, 0);
     }
@@ -268,31 +274,36 @@ int main(int argc, char ** argv) {
   // communicate with STM8 bootloader
   ////////
 
-  // reset STMP using DTR line (USB/RS232) or GPIO18 (Raspberry UART)
-  if (resetSTM8) {
-
-    // Raspi -> if port is UART, reset via GPIO18, else via DTR
-#ifdef __ARMEL__
-    if (strstr(portname, "ttyAMA")) {
-      printf("  reset via GPIO18 ... ");
-      pulse_GPIO(18, 10);
-      printf("done\n");
-    }
-    else {
-      printf("  reset via DTR ... ");
-      pulse_DTR(ptrPort, 10);
-      printf("done\n");
-    }
-    
-    // non-Raspi -> reset via DTR line
-#else
+  // HW reset STM8 using DTR line (USB/RS232)
+  if (resetSTM8 == 1) {
     printf("  reset via DTR ... ");
     pulse_DTR(ptrPort, 10);
     printf("done\n");
-#endif
+    SLEEP(5);                       // allow BSL to initialize
   }
-  SLEEP(50);
   
+  // SW reset STM8 via command 'Re5eT!' at 115.2kBaud (requires respective STM8 SW)
+  else if (resetSTM8 == 2) {
+    set_baudrate(ptrPort, 115200);    // expect STM8 SW to receive at 115.2kBaud
+    printf("  reset via UART command ... ");
+    sprintf(buf, "Re5eT!");           // reset command (same as in STM8 SW!)
+    for (i=0; i<6; i++) {
+      send_port(ptrPort, 1, buf+i);   // send reset command bytewise to account for slow handling
+      SLEEP(10);
+    }
+    printf("done\n");
+    set_baudrate(ptrPort, baudrate);  // restore specified baudrate
+  }
+  
+  // HW reset STM8 using GPIO18 pin (only Raspberry Pi!)
+  #ifdef __ARMEL__
+    else if (resetSTM8 == 3) {
+      printf("  reset via GPIO18 ... ");
+      pulse_GPIO(18, 10);
+      printf("done\n");
+      SLEEP(5);                       // allow BSL to initialize
+    }
+  #endif // __ARMEL__
   
   // synchronize baudrate
   bsl_sync(ptrPort);
