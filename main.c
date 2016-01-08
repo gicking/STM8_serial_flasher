@@ -237,27 +237,28 @@ int main(int argc, char ** argv) {
 
   // If specified import hexfile - do it early here to be able to report file read errors before others
   if (strlen(hexfile)>0) {
-    
-    // import hexfile
-    load_hexfile(hexfile, buf, BUFSIZE);
+    const char *shortname = strrchr(hexfile, '/');
+    if (!shortname)
+      shortname = hexfile;
 
     // convert to memory image, depending on file type
     const char *dot = strrchr (hexfile, '.');
     if (dot && !strcmp(dot, ".s19")) {
       if (verbose)
-        printf ("  Reading Motorola S-record file %s\n", hexfile);
+        printf("  Loading Motorola S-record file %s …\n", shortname);
+      load_hexfile(hexfile, buf, BUFSIZE);
       convert_s19(buf, &imageStart, &numBytes, image);
       }
     else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
       if (verbose)
-        printf ("  Reading Intel hex file %s\n", hexfile);
+        printf("  Loading Intel hex file %s …\n", shortname);
+      load_hexfile(hexfile, buf, BUFSIZE);
       convert_hex(buf, &imageStart, &numBytes, image);
     }
     else {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
-
-      Exit(1, g_pauseOnExit);
+      if (verbose)
+        printf("  Loading binary file %s …\n", shortname);
+      load_binfile(hexfile, image, &imageStart, &numBytes, BUFSIZE);
     }
   }
 

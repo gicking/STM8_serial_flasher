@@ -77,26 +77,14 @@ char *get_line(char **buf, char *line) {
    read hexfile from file to memory buffer. Don't interpret (is done
    in separate routine)
 */
-void load_hexfile(char *filename, char *buf, uint32_t bufsize) {
+void load_hexfile(const char *filename, char *buf, uint32_t bufsize) {
 
   FILE      *fp;
-  char      *tmp2;
   uint32_t  len;
   
-  // print message (if present, strip path)
-  tmp2 = strrchr(filename, '/');
-  if (tmp2)
-    printf("  load file '%s' ... ", tmp2+1);
-  else
-    printf("  load file '%s' ... ", filename);
-  fflush(stdout);
-  
   // open file to read
-  if (!(fp = fopen(filename, "rb"))) {
-    setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'load_hexfile()': cannot open file, exit!\n\n");
-    Exit(1, g_pauseOnExit);
-  }
+  if (!(fp = fopen(filename, "rb")))
+    Error("Failed to open file");
      
   // get filesize
   fseek(fp, 0, SEEK_END);
@@ -114,16 +102,38 @@ void load_hexfile(char *filename, char *buf, uint32_t bufsize) {
   
   // print message
   if (len>2048)
-    printf("done (%1.1fkB)\n", (float) len/1024.0);
+    printf("  done (%1.1fkB)\n", (float) len/1024.0);
   else if (len>0)
-    printf("done (%dB)\n", len);
+    printf("  done (%dB)\n", len);
   else
-    printf("done, no data read\n");
+    printf("  done, no data read\n");
   fflush(stdout);
 
 } // load_hexfile
 
-  
+void load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t *numBytes, uint32_t bufsize)
+{
+  FILE *fp;
+  long len;
+
+  // open file to read
+  if (!(fp = fopen(filename, "rb")))
+    Error("Failed to open file");
+
+   // get filesize
+  fseek(fp, 0, SEEK_END);
+  len = ftell(fp);
+  fseek(fp, 0, SEEK_SET);
+
+  if(len > bufsize)
+    Error("Binary file too large (%ld bytes)", len);
+
+  fread(buf, len, 1, fp);
+  fclose(fp);
+
+  *addrStart = 0x8000;
+  *numBytes = len;
+}
 
 /**
    \fn void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image)

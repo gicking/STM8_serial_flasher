@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 // color codes 
 #define PRM_COLOR_DEFAULT       0
@@ -40,6 +41,9 @@
 #else
   #error OS not supported
 #endif
+
+/// Display error message and terminate
+void Error(const char *format, ...);
 
 /// terminate program after cleaning up
 void        Exit(uint8_t code, uint8_t pause);
