@@ -366,11 +366,12 @@ int main(int argc, char ** argv) {
     
     // import hexfile
     load_hexfile(hexfile, buf, BUFSIZE);
-    
+
     // convert to memory image, depending on file type
-    if (strstr(hexfile, ".s19") != NULL)                                              // Motorola S-record format
+    const char *dot = strrchr (hexfile, '.');
+    if (dot && strstr(dot, ".s19"))                                                  // Motorola S-record format
       convert_s19(buf, &imageStart, &numBytes, image);
-    else if ((strstr(hexfile, ".hex") != NULL) || (strstr(hexfile, ".ihx") != NULL))  // Intel HEX-format
+    else if (dot && (strstr(dot, ".hex") || strstr(dot, ".ihx")))  // Intel HEX-format
       convert_hex(buf, &imageStart, &numBytes, image);
     else {
       setConsoleColor(PRM_COLOR_RED);
