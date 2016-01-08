@@ -396,41 +396,8 @@ int main(int argc, char ** argv) {
   }
 
   // if specified upload hexfile
-  if (strlen(hexfile)>0) {
-
-    // import hexfile
-    load_hexfile(hexfile, buf, BUFSIZE);
-
-    // convert to memory image, depending on file type
-    const char *dot = strrchr (hexfile, '.');
-    if (dot && !strcmp(dot, ".s19")) {
-      if (verbose)
-        printf ("Reading Motorola S-record file %s\n", hexfile);
-      convert_s19(buf, &imageStart, &numBytes, image);
-      }
-    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
-      if (verbose)
-        printf ("Reading Motorola S-record file %s\n", hexfile);
-      convert_hex(buf, &imageStart, &numBytes, image);
-    }
-    else {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
-      Exit(1, g_pauseOnExit);
-    }
-    
-    // for speed erase in 1kB blocks --> skip, because not faster but higher risk
-    /*
-    for (i=imageStart; i<imageStart+numBytes; i+=1024) {
-      bsl_flashErase(ptrPort, i);    
-    }
-    */
-
+  if (strlen(hexfile)>0)
     bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
-
-  } // upload hexfile
-
-  
   
   // memory read
   //imageStart = 0x8000;  numBytes = 128*1024;   // complete 128kB flash

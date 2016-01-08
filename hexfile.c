@@ -116,11 +116,10 @@ void load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t
   FILE *fp;
   long len;
 
-  // open file to read
-  if (!(fp = fopen(filename, "rb")))
+  if(!(fp = fopen(filename, "rb")))
     Error("Failed to open file");
 
-   // get filesize
+  // Get filesize
   fseek(fp, 0, SEEK_END);
   len = ftell(fp);
   fseek(fp, 0, SEEK_SET);
