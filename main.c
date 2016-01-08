@@ -109,7 +109,7 @@ int main(int argc, char ** argv) {
   // initialize global variables
   g_pauseOnExit = 1;            // wait for <return> before terminating
   g_UARTmode    = 0;            // 2-wire interface with UART duplex mode
-  
+  verbose       = false;        // verbose output when requested only
   
   // initialize default arguments
   portname[0] = '\0';           // no default port name
@@ -180,6 +180,10 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-q"))
       g_pauseOnExit = 0;
 
+    // don't prompt for <return> prior to exit
+    else if (!strcmp(argv[i], "-v"))
+      verbose = true;
+
     // else print list of commandline arguments and language commands
     else {
       if (strrchr(argv[0],'\\'))
@@ -189,7 +193,7 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p COMx] [-b BR] [-u mode] [-f file] [-r] [-x] [-j] [-Q] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-r] [-x] [-j] [-Q] [-q]\n\n", appname);
       printf("  -h        print this help\n");
       printf("  -p name   name of communication port (default: list all ports and query)\n");
       printf("  -b baud   communication baudrate in Baud (default: 230400)\n");
@@ -230,7 +234,32 @@ int main(int argc, char ** argv) {
     scanf("%s", portname);
     getchar();
   } // if no comm port name
- 
+
+  // If specified import hexfile - do it early here to be able to report file read errors before others
+  if (strlen(hexfile)>0) {
+    
+    // import hexfile
+    load_hexfile(hexfile, buf, BUFSIZE);
+
+    // convert to memory image, depending on file type
+    const char *dot = strrchr (hexfile, '.');
+    if (dot && !strcmp(dot, ".s19")) {
+      if (verbose)
+        printf ("  Reading Motorola S-record file %s\n", hexfile);
+      convert_s19(buf, &imageStart, &numBytes, image);
+      }
+    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
+      if (verbose)
+        printf ("  Reading Intel hex file %s\n", hexfile);
+      convert_hex(buf, &imageStart, &numBytes, image);
+    }
+    else {
+      setConsoleColor(PRM_COLOR_RED);
+      fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
+
+      Exit(1, g_pauseOnExit);
+    }
+  }
 
   ////////
   // put STM8 into bootloader mode
@@ -241,7 +270,6 @@ int main(int argc, char ** argv) {
     fflush(stdin);
     getchar();
   }
-
 
   ////////
   // open port with given properties
@@ -353,26 +381,37 @@ int main(int argc, char ** argv) {
     fprintf(stderr, "\n\nerror: unsupported device, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
-  
-  // convert device dependent flash routines to memory image
-  convert_s19(ptr, &imageStart, &numBytes, image);
 
-  // upload flash routines to RAM
-  bsl_memWrite(ptrPort, imageStart, numBytes, image, 0);
+  {
+    char      ramImage[8192];
+    uint32_t  ramImageStart;
+    uint32_t  numRamBytes;
 
+    convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
 
-  // if specified import & upload hexfile
+    if (verbose)
+      printf ("Uploading RAM routines\n");
+    bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
+  }
+
+  // if specified upload hexfile
   if (strlen(hexfile)>0) {
-    
+
     // import hexfile
     load_hexfile(hexfile, buf, BUFSIZE);
 
     // convert to memory image, depending on file type
     const char *dot = strrchr (hexfile, '.');
-    if (dot && !strcmp(dot, ".s19"))                                                  // Motorola S-record format
+    if (dot && !strcmp(dot, ".s19")) {
+      if (verbose)
+        printf ("Reading Motorola S-record file %s\n", hexfile);
       convert_s19(buf, &imageStart, &numBytes, image);
-    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx")))  // Intel HEX-format
+      }
+    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
+      if (verbose)
+        printf ("Reading Motorola S-record file %s\n", hexfile);
       convert_hex(buf, &imageStart, &numBytes, image);
+    }
     else {
       setConsoleColor(PRM_COLOR_RED);
       fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
@@ -385,8 +424,7 @@ int main(int argc, char ** argv) {
       bsl_flashErase(ptrPort, i);    
     }
     */
-    
-    // upload data to flash or RAM
+
     bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
 
   } // upload hexfile
@@ -415,7 +453,8 @@ int main(int argc, char ** argv) {
   // clean up and exit
   ////////
   close_port(&ptrPort);
-  printf("done with program\n");
+  if (verbose)
+    printf("done with program\n");
   Exit(0, g_pauseOnExit);
   
   // avoid compiler warnings
