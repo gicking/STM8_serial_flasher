@@ -172,11 +172,8 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     chkCalc = 0x00;
     
     // check 1st char (must be 'S')
-    if (line[0] != 'S') {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror in 'convert_s19()': line %d does not start with 'S', exit!\n\n", linecount);
-      Exit(1, g_pauseOnExit);
-    }
+    if (line[0] != 'S')
+      Error("Line %d of Motorola S-record file not start with 'S'", linecount);
     
     // record type
     type = line[1]-48;
@@ -223,11 +220,8 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     
     // assert checksum (0xFF xor (sum over all except record type)
     chkCalc ^= 0xFF;                 // invert checksum
-    if (chkCalc != chkRead) {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror in 'convert_s19()': line %d has wrong checksum (0x%02x vs. 0x%02x), exit!\n\n", linecount, chkRead, chkCalc);
-      Exit(1, g_pauseOnExit);
-    }
+    if (chkCalc != chkRead)
+      Error("Checksum error in line %d of Motorola S-record file (0x%02x vs. 0x%02x)", linecount, chkRead, chkCalc);
     
     // store min/max address
     if (addr < addrMin)
@@ -350,11 +344,8 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     chkCalc = 0x00;
     
     // check 1st char (must be ':')
-    if (line[0] != ':') {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror in 'convert_hex()': line %d does not start with 'S', exit!\n\n", linecount);
-      Exit(1, g_pauseOnExit);
-    }
+    if (line[0] != ':')
+      Error("Line %d of Intel hex file not start with ':'", linecount);
     
     // record length (address + data + checksum)
     sprintf(tmp,"0x00");
@@ -404,12 +395,8 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
       chkCalc += (uint8_t)  val;
       addrOff = val << 16;
     } // type==4
-    
-    else {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has unsupported type %d, exit!\n\n", linecount, type);
-      Exit(1, g_pauseOnExit);
-    }
+    else
+      Error("Line %d of Intel hex file has unsupported type %d", linecount, type);
     
     // checksum
     sprintf(tmp,"0x00");
@@ -419,11 +406,8 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
     
     // assert checksum (0xFF xor (sum over all except record type)
     chkCalc = 255 - chkCalc + 1;                 // calculate 2-complement
-    if (chkCalc != chkRead) {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has wrong checksum (0x%02x vs. 0x%02x), exit!\n\n", linecount, chkRead, chkCalc);
-      Exit(1, g_pauseOnExit);
-    }
+    if (chkCalc != chkRead)
+      Error("Line %d of Intel hex file has wrong checksum (0x%02x vs. 0x%02x)", linecount, chkRead, chkCalc);
     
     // store min/max address
     if (addr < addrMin)
@@ -490,11 +474,8 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
         addrOff = val << 16;
       } // type==4
     
-      else {
-        setConsoleColor(PRM_COLOR_RED);
-        fprintf(stderr, "\n\nerror in 'convert_hex()': line %d has unsupported type %d, exit!\n\n", linecount, type);
-        Exit(1, g_pauseOnExit);
-      }
+      else
+        Error("Line %d of Intel hex file has unsupported type %d", linecount, type);
     
     } // while !EOF
     
@@ -521,4 +502,3 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   
 } // convert_hex
 
-// end of file

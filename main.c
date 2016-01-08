@@ -391,7 +391,7 @@ int main(int argc, char ** argv) {
     convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
 
     if (verbose)
-      printf ("Uploading RAM routines\n");
+      printf("Uploading RAM routines\n");
     bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
   }
 
@@ -430,5 +430,3 @@ int main(int argc, char ** argv) {
   
 } // main
 
-
-// end of file
