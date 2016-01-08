@@ -369,9 +369,9 @@ int main(int argc, char ** argv) {
 
     // convert to memory image, depending on file type
     const char *dot = strrchr (hexfile, '.');
-    if (dot && strstr(dot, ".s19"))                                                  // Motorola S-record format
+    if (dot && !strcmp(dot, ".s19"))                                                  // Motorola S-record format
       convert_s19(buf, &imageStart, &numBytes, image);
-    else if (dot && (strstr(dot, ".hex") || strstr(dot, ".ihx")))  // Intel HEX-format
+    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx")))  // Intel HEX-format
       convert_hex(buf, &imageStart, &numBytes, image);
     else {
       setConsoleColor(PRM_COLOR_RED);
