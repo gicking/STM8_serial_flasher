@@ -69,7 +69,7 @@ void Error(const char *format, ...)
   vfprintf(stderr, format, vargs);
   va_end(vargs);
   fprintf(stderr, "\n");
-  Exit(1, 0);
+  Exit(1, 1);
 }
 
 /**
