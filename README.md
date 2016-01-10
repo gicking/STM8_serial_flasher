@@ -1,7 +1,7 @@
 STM8_serial_flasher
 -------------------
 
-PC tool for uplading hexfiles to the STM8 microcontroller via COM port or USB using the built-in ROM bootloader (BSL) of the STM8. I wrote this tool, because the similar "Flash Loader Demonstrator" tool by STMicroelectronics supports Windows only.
+A tool for uploading hexfiles to the STM8 microcontroller flash via COM port or USB using the built-in ROM bootloader (BSL) of the STM8. I wrote this tool, because the similar "Flash Loader Demonstrator" tool by STMicroelectronics supports Windows only.
 
 Content:
   - STM8_serial_flasher -> program STM8 via bootloader and USB or UART interface

@@ -1,7 +1,7 @@
 # Project: STM8_serial_flasher
 
 CC            = gcc
-CFLAGS        = -c -Wall -I./STM8_Routines
+CFLAGS        = -c -Wall -pedantic -I./STM8_Routines
 LDFLAGS       = -g3 -lm
 SOURCES       = bootloader.c hexfile.c main.c misc.c serial_comm.c
 INCLUDES      = globals.h misc.h bootloader.h hexfile.h serial_comm.h main.h

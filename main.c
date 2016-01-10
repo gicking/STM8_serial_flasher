@@ -109,7 +109,7 @@ int main(int argc, char ** argv) {
   // initialize global variables
   g_pauseOnExit = 1;            // wait for <return> before terminating
   g_UARTmode    = 0;            // 2-wire interface with UART duplex mode
-  
+  verbose       = false;        // verbose output when requested only
   
   // initialize default arguments
   portname[0] = '\0';           // no default port name
@@ -180,6 +180,10 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-q"))
       g_pauseOnExit = 0;
 
+    // verbose output
+    else if (!strcmp(argv[i], "-v"))
+      verbose = true;
+
     // else print list of commandline arguments and language commands
     else {
       if (strrchr(argv[0],'\\'))
@@ -189,10 +193,10 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p COMx] [-b BR] [-u mode] [-f file] [-r ch] [-x] [-j] [-Q] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-r ch] [-x] [-j] [-Q] [-q] [-v]\n\n", appname);
       printf("  -h        print this help\n");
-      printf("  -p COMx   name of communication port (default: list all ports and query)\n");
-      printf("  -b BR     communication baudrate in Baud (default: 230400)\n");
+      printf("  -p port   name of communication port (default: list all ports and query)\n");
+      printf("  -b rate   communication baudrate in Baud (default: 230400)\n");
       printf("  -u mode   UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
       printf("  -f file   name of s19 or intel-hex file to flash (default: none)\n");
       #ifdef __ARMEL__
@@ -204,6 +208,7 @@ int main(int argc, char ** argv) {
       printf("  -j        don't jump to flash after upload (default: jump to flash)\n");
       printf("  -Q        don't prompt for <return> prior to upload (default: prompt)\n");
       printf("  -q        don't prompt for <return> prior to exit (default: prompt)\n");
+      printf("  -v        verbose output\n");
       printf("\n");
       Exit(0, 0);
     }
@@ -230,7 +235,33 @@ int main(int argc, char ** argv) {
     scanf("%s", portname);
     getchar();
   } // if no comm port name
- 
+
+  // If specified import hexfile - do it early here to be able to report file read errors before others
+  if (strlen(hexfile)>0) {
+    const char *shortname = strrchr(hexfile, '/');
+    if (!shortname)
+      shortname = hexfile;
+
+    // convert to memory image, depending on file type
+    const char *dot = strrchr (hexfile, '.');
+    if (dot && !strcmp(dot, ".s19")) {
+      if (verbose)
+        printf("  Loading Motorola S-record file %s …\n", shortname);
+      load_hexfile(hexfile, buf, BUFSIZE);
+      convert_s19(buf, &imageStart, &numBytes, image);
+      }
+    else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
+      if (verbose)
+        printf("  Loading Intel hex file %s …\n", shortname);
+      load_hexfile(hexfile, buf, BUFSIZE);
+      convert_hex(buf, &imageStart, &numBytes, image);
+    }
+    else {
+      if (verbose)
+        printf("  Loading binary file %s …\n", shortname);
+      load_binfile(hexfile, image, &imageStart, &numBytes, BUFSIZE);
+    }
+  }
 
   ////////
   // put STM8 into bootloader mode
@@ -241,7 +272,6 @@ int main(int argc, char ** argv) {
     fflush(stdin);
     getchar();
   }
-
 
   ////////
   // open port with given properties
@@ -353,44 +383,22 @@ int main(int argc, char ** argv) {
     fprintf(stderr, "\n\nerror: unsupported device, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
-  
-  // convert device dependent flash routines to memory image
-  convert_s19(ptr, &imageStart, &numBytes, image);
 
-  // upload flash routines to RAM
-  bsl_memWrite(ptrPort, imageStart, numBytes, image, 0);
+  {
+    char      ramImage[8192];
+    uint32_t  ramImageStart;
+    uint32_t  numRamBytes;
 
+    convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
 
-  // if specified import & upload hexfile
-  if (strlen(hexfile)>0) {
-    
-    // import hexfile
-    load_hexfile(hexfile, buf, BUFSIZE);
-    
-    // convert to memory image, depending on file type
-    if (strstr(hexfile, ".s19") != NULL)                                              // Motorola S-record format
-      convert_s19(buf, &imageStart, &numBytes, image);
-    else if ((strstr(hexfile, ".hex") != NULL) || (strstr(hexfile, ".ihx") != NULL))  // Intel HEX-format
-      convert_hex(buf, &imageStart, &numBytes, image);
-    else {
-      setConsoleColor(PRM_COLOR_RED);
-      fprintf(stderr, "\n\nerror: unsupported file format, exit!\n\n");
-      Exit(1, g_pauseOnExit);
-    }
-    
-    // for speed erase in 1kB blocks --> skip, because not faster but higher risk
-    /*
-    for (i=imageStart; i<imageStart+numBytes; i+=1024) {
-      bsl_flashErase(ptrPort, i);    
-    }
-    */
-    
-    // upload data to flash or RAM
+    if (verbose)
+      printf("Uploading RAM routines\n");
+    bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
+  }
+
+  // if specified upload hexfile
+  if (strlen(hexfile)>0)
     bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
-
-  } // upload hexfile
-
-  
   
   // memory read
   //imageStart = 0x8000;  numBytes = 128*1024;   // complete 128kB flash
@@ -414,7 +422,8 @@ int main(int argc, char ** argv) {
   // clean up and exit
   ////////
   close_port(&ptrPort);
-  printf("done with program\n");
+  if (verbose)
+    printf("done with program\n");
   Exit(0, g_pauseOnExit);
   
   // avoid compiler warnings
@@ -422,5 +431,3 @@ int main(int argc, char ** argv) {
   
 } // main
 
-
-// end of file

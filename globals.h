@@ -19,6 +19,7 @@
 
 // include files
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 
 
@@ -45,6 +46,8 @@ global uint8_t        g_pauseOnExit;
 /// bootloader UART mode and interface: 0=duplex, 1=1-wire reply, 2=2-wire reply
 global uint8_t        g_UARTmode;
 
+// Verbose console output
+global bool verbose;
 
 // undefine global again
 #undef global

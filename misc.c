@@ -60,6 +60,17 @@
 
 #endif // WIN32
 
+void Error(const char *format, ...)
+{
+  va_list vargs;
+  va_start(vargs, format);
+  setConsoleColor(PRM_COLOR_RED);
+  fprintf(stderr, "Error: ");
+  vfprintf(stderr, format, vargs);
+  va_end(vargs);
+  fprintf(stderr, "\n");
+  Exit(1, 0);
+}
 
 /**
   \fn void Exit(uint8_t code, uint8_t pause)
