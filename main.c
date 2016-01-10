@@ -180,7 +180,7 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-q"))
       g_pauseOnExit = 0;
 
-    // don't prompt for <return> prior to exit
+    // verbose output
     else if (!strcmp(argv[i], "-v"))
       verbose = true;
 
@@ -193,21 +193,22 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-r] [-x] [-j] [-Q] [-q]\n\n", appname);
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-r ch] [-x] [-j] [-Q] [-q] [-v]\n\n", appname);
       printf("  -h        print this help\n");
-      printf("  -p name   name of communication port (default: list all ports and query)\n");
-      printf("  -b baud   communication baudrate in Baud (default: 230400)\n");
-      printf("  -u N      UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
+      printf("  -p port   name of communication port (default: list all ports and query)\n");
+      printf("  -b rate   communication baudrate in Baud (default: 230400)\n");
+      printf("  -u mode   UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
       printf("  -f file   name of s19 or intel-hex file to flash (default: none)\n");
       #ifdef __ARMEL__
-        printf("  -r rst    reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
+        printf("  -r ch     reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
       #else
-        printf("  -r rst    reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
+        printf("  -r ch     reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
       #endif
       printf("  -x        don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j        don't jump to flash after upload (default: jump to flash)\n");
       printf("  -Q        don't prompt for <return> prior to upload (default: prompt)\n");
       printf("  -q        don't prompt for <return> prior to exit (default: prompt)\n");
+      printf("  -v        verbose output\n");
       printf("\n");
       Exit(0, 0);
     }
