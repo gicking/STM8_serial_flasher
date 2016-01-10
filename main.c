@@ -107,7 +107,7 @@ int main(int argc, char ** argv) {
   
 
   // initialize global variables
-  g_pauseOnExit = 1;            // wait for <return> before terminating
+  g_pauseOnExit = 0;            // no wait for <return> before terminating
   g_UARTmode    = 0;            // 2-wire interface with UART duplex mode
   verbose       = false;        // verbose output when requested only
   
@@ -176,9 +176,9 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-Q"))
       pauseOnLaunch = 0;
 
-    // don't prompt for <return> prior to exit
+    // prompt for <return> prior to exit
     else if (!strcmp(argv[i], "-q"))
-      g_pauseOnExit = 0;
+      g_pauseOnExit = 1;
 
     // verbose output
     else if (!strcmp(argv[i], "-v"))
@@ -207,7 +207,7 @@ int main(int argc, char ** argv) {
       printf("  -x        don't enable ROM bootloader after upload (default: enable)\n");
       printf("  -j        don't jump to flash after upload (default: jump to flash)\n");
       printf("  -Q        don't prompt for <return> prior to upload (default: prompt)\n");
-      printf("  -q        don't prompt for <return> prior to exit (default: prompt)\n");
+      printf("  -q        prompt for <return> prior to exit (default: no prompt)\n");
       printf("  -v        verbose output\n");
       printf("\n");
       Exit(0, 0);
