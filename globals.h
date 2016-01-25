@@ -39,6 +39,8 @@
   #define global extern
 #endif
 
+/// verbose output
+global uint8_t        g_verbose;
 
 /// wait for \<return\> prior to closing console window
 global uint8_t        g_pauseOnExit;

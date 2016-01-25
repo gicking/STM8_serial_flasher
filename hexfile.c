@@ -101,16 +101,34 @@ void load_hexfile(const char *filename, char *buf, uint32_t bufsize) {
   buf[len++] = 0;
   
   // print message
-  if (len>2048)
-    printf("  done (%1.1fkB)\n", (float) len/1024.0);
-  else if (len>0)
-    printf("  done (%dB)\n", len);
-  else
-    printf("  done, no data read\n");
-  fflush(stdout);
+  if (g_verbose) {
+    if (len>2048)
+      printf("ok (%1.1fkB)\n", (float) len/1024.0);
+    else if (len>0)
+      printf("ok (%dB)\n", len);
+    else
+      printf("ok, no data read\n");
+    fflush(stdout);
+  }
 
 } // load_hexfile
 
+  
+
+/**
+   \fn load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t *numBytes, uint32_t bufsize)
+   
+   \brief read binary into memory buffer
+   
+   \param[in]  filename   name of hexfile to read
+   \param[out] buf        memory buffer containing file content (0-terminated)
+   \param[out] addrStart  starting address (fixed @ 0x8000)
+   \param[out] numBytes   number of read bytes
+   \param[in]  bufsize    max size of memory buffer
+   
+   read hexfile from file to memory buffer. Don't interpret (is done
+   in separate routine)
+*/
 void load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t *numBytes, uint32_t bufsize)
 {
   FILE *fp;
@@ -132,7 +150,21 @@ void load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t
 
   *addrStart = 0x8000;
   *numBytes = len;
-}
+  
+  // print message
+  if (g_verbose) {
+    if (len>2048)
+      printf("ok (%1.1fkB)\n", (float) len/1024.0);
+    else if (len>0)
+      printf("ok (%ldB)\n", len);
+    else
+      printf("ok, no data read\n");
+    fflush(stdout);
+  }
+
+} // load_binfile
+
+
 
 /**
    \fn void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image)
@@ -293,11 +325,11 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   // print message
   /*
   if ((*numBytes)>2048)
-    printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
+    printf("ok (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
   else if ((*numBytes)>0)
-    printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
+    printf("ok (%dB @ 0x%04x)\n", *numBytes, addrMin);
   else
-    printf("done, no data read\n");
+    printf("ok, no data read\n");
   fflush(stdout);
   */
   
@@ -492,11 +524,11 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   // print message
   /*
   if ((*numBytes)>2048)
-    printf("done (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
+    printf("ok (%1.1fkB @ 0x%04x)\n", (float) (*numBytes)/1024.0, addrMin);
   else if ((*numBytes)>0)
-    printf("done (%dB @ 0x%04x)\n", *numBytes, addrMin);
+    printf("ok (%dB @ 0x%04x)\n", *numBytes, addrMin);
   else
-    printf("done, no data read\n");
+    printf("ok, no data read\n");
   fflush(stdout);
   */
   

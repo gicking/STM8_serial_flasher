@@ -107,9 +107,9 @@ int main(int argc, char ** argv) {
   
 
   // initialize global variables
+  g_verbose     = false;        // g_verbose output when requested only
   g_pauseOnExit = 0;            // no wait for <return> before terminating
   g_UARTmode    = 0;            // 2-wire interface with UART duplex mode
-  verbose       = false;        // verbose output when requested only
   
   // initialize default arguments
   portname[0] = '\0';           // no default port name
@@ -180,9 +180,9 @@ int main(int argc, char ** argv) {
     else if (!strcmp(argv[i], "-q"))
       g_pauseOnExit = 1;
 
-    // verbose output
+    // g_verbose output
     else if (!strcmp(argv[i], "-v"))
-      verbose = true;
+      g_verbose = true;
 
     // else print list of commandline arguments and language commands
     else {
@@ -245,20 +245,20 @@ int main(int argc, char ** argv) {
     // convert to memory image, depending on file type
     const char *dot = strrchr (hexfile, '.');
     if (dot && !strcmp(dot, ".s19")) {
-      if (verbose)
-        printf("  Loading Motorola S-record file %s …\n", shortname);
+      if (g_verbose)
+        printf("  load Motorola S-record file '%s' ... ", shortname);
       load_hexfile(hexfile, buf, BUFSIZE);
       convert_s19(buf, &imageStart, &numBytes, image);
-      }
+    }
     else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
-      if (verbose)
-        printf("  Loading Intel hex file %s …\n", shortname);
+      if (g_verbose)
+        printf("  load Intel hex file '%s' ... ", shortname);
       load_hexfile(hexfile, buf, BUFSIZE);
       convert_hex(buf, &imageStart, &numBytes, image);
     }
     else {
-      if (verbose)
-        printf("  Loading binary file %s …\n", shortname);
+      if (g_verbose)
+        printf("  load binary file '%s' ... ", shortname);
       load_binfile(hexfile, image, &imageStart, &numBytes, BUFSIZE);
     }
   }
@@ -276,14 +276,18 @@ int main(int argc, char ** argv) {
   ////////
   // open port with given properties
   ////////
-  printf("  open port '%s' with %gkBaud ... ", portname, (float) baudrate / 1000.0);
-  fflush(stdout);
+  if (g_verbose) {
+    printf("  open port '%s' with %gkBaud ... ", portname, (float) baudrate / 1000.0);
+    fflush(stdout);
+  }
   if (g_UARTmode == 0)
     ptrPort = init_port(portname, baudrate, 1000, 8, 2, 1, 0, 0);   // use even parity
   else
     ptrPort = init_port(portname, baudrate, 1000, 8, 0, 1, 0, 0);   // use no parity
-  printf("ok\n");
-  fflush(stdout);
+  if (g_verbose) {
+    printf("ok\n");
+    fflush(stdout);
+  }
   
  
   // debug: communication test (echo+1 test-SW on STM8)
@@ -295,7 +299,7 @@ int main(int argc, char ** argv) {
     receive_port(ptrPort, 1, Rx);
 	printf("%d  %d\n", (int) Tx[0], (int) Rx[0]);
   }
-  printf("done\n");
+  printf("ok\n");
   Exit(1,0);
   */
   
@@ -308,7 +312,7 @@ int main(int argc, char ** argv) {
   if (resetSTM8 == 1) {
     printf("  reset via DTR ... ");
     pulse_DTR(ptrPort, 10);
-    printf("done\n");
+    printf("ok\n");
     SLEEP(5);                       // allow BSL to initialize
   }
   
@@ -321,7 +325,7 @@ int main(int argc, char ** argv) {
       send_port(ptrPort, 1, buf+i);   // send reset command bytewise to account for slow handling
       SLEEP(10);
     }
-    printf("done\n");
+    printf("ok\n");
     set_baudrate(ptrPort, baudrate);  // restore specified baudrate
   }
   
@@ -330,7 +334,7 @@ int main(int argc, char ** argv) {
     else if (resetSTM8 == 3) {
       printf("  reset via GPIO18 ... ");
       pulse_GPIO(18, 10);
-      printf("done\n");
+      printf("ok\n");
       SLEEP(5);                       // allow BSL to initialize
     }
   #endif // __ARMEL__
@@ -391,14 +395,18 @@ int main(int argc, char ** argv) {
 
     convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
 
-    if (verbose)
-      printf("Uploading RAM routines\n");
+    if (g_verbose)
+      printf("  Uploading RAM routines ...");
     bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
+    if (g_verbose)
+      printf("ok\n");
   }
+
 
   // if specified upload hexfile
   if (strlen(hexfile)>0)
     bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
+
   
   // memory read
   //imageStart = 0x8000;  numBytes = 128*1024;   // complete 128kB flash
@@ -408,9 +416,11 @@ int main(int argc, char ** argv) {
   
   // enable ROM bootloader after upload (option bytes always on same address)
   if (enableBSL==1) {
-    printf("  activate bootloader ... ");
+    if (g_verbose)
+      printf("  activate bootloader ... ");
     bsl_memWrite(ptrPort, 0x487E, 2, (char*)"\x55\xAA", 0);
-    printf("done\n");
+    if (g_verbose)
+      printf("ok\n");
   }
   
   // jump to flash start address after upload (reset vector always on same address)
@@ -422,8 +432,7 @@ int main(int argc, char ** argv) {
   // clean up and exit
   ////////
   close_port(&ptrPort);
-  if (verbose)
-    printf("done with program\n");
+  printf("done with program\n");
   Exit(0, g_pauseOnExit);
   
   // avoid compiler warnings

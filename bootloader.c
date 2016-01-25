@@ -85,11 +85,11 @@ uint8_t bsl_sync(HANDLE ptrPort) {
   
   // check if ok
   if ((len==lenRx) && (Rx[0]==ACK)) {
-    printf("success (ACK)\n");
+    printf("ok (ACK)\n");
     fflush(stdout);
   }
   else if ((len==lenRx) && (Rx[0]==NACK)) {
-    printf("success (NACK)\n");
+    printf("ok (NACK)\n");
     fflush(stdout);
   }
   else if (len==lenRx) {
@@ -131,9 +131,11 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
   char  Tx[1000], Rx[1000];
 
   // print message
-  printf("  determine device ... ");
-  fflush(stdout);
-  
+  if (g_verbose) {
+    printf("  determine device ... ");
+    fflush(stdout);
+  }
+
   // init receive buffer
   for (i=0; i<1000; i++)
     Rx[i] = 0;
@@ -256,8 +258,10 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
   *vers = Rx[2];
   
   // print message
-  printf("done (%dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
-  fflush(stdout);
+  if (g_verbose) {
+    printf("ok (%dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
+    fflush(stdout);
+  }
   
   // avoid compiler warnings
   return(0);
@@ -289,9 +293,9 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
 
   // print message
   if (numBytes > 2048)
-    printf("  read %1.1fkB from 0x%04x (%1.1fkB) ", (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
+    printf("  read %1.1fkB from 0x%04x (%1.1fkB) ... ", (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
   else
-    printf("  read %dB from 0x%04x (%dB) ", numBytes, (int) addrStart, idx);
+    printf("  read %dB from 0x%04x (%dB) ... ", numBytes, (int) addrStart, idx);
   fflush(stdout);
   
   // init receive buffer
@@ -433,9 +437,9 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
     // print progress
     if ((idx % 2048) == 0) {
       if (numBytes > 1024)
-        printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
+        printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ... ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
       else
-        printf("%c  read %dB from 0x%04x (%dB) ", '\r', numBytes, (int) addrStart, idx);
+        printf("%c  read %dB from 0x%04x (%dB) ... ", '\r', numBytes, (int) addrStart, idx);
       fflush(stdout);
     }
 
@@ -443,10 +447,10 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
   
   // print message
   if (numBytes > 2048)
-    printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
+    printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ... ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
   else
-    printf("%c  read %dB from 0x%04x (%dB) ", '\r', numBytes, (int) addrStart, idx);
-  printf(" done\n");
+    printf("%c  read %dB from 0x%04x (%dB) ... ", '\r', numBytes, (int) addrStart, idx);
+  printf("ok\n");
   fflush(stdout);
   
   // debug: print buffer
@@ -726,7 +730,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
 
     
   // print message
-  printf("success\n");
+  printf("ok\n");
   fflush(stdout);
   
   // avoid compiler warnings
@@ -930,10 +934,9 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
   // print message
   if (verbose) {
     if (numBytes > 2048)
-      printf("%c  upload %1.1fkB starting at 0x%04x ", '\r', (float) idx2/1024.0, (int) addrStart);
+      printf("%c  upload %1.1fkB starting at 0x%04x ... ok   \n", '\r', (float) idx2/1024.0, (int) addrStart);
     else
-      printf("%c  upload %dB starting at 0x%04x ", '\r', idx2, (int) addrStart);
-    printf("done                \n");
+      printf("%c  upload %dB starting at 0x%04x ... ok   \n", '\r', idx2, (int) addrStart);
     fflush(stdout);
   }
   
@@ -1052,7 +1055,7 @@ uint8_t bsl_jumpTo(HANDLE ptrPort, uint32_t addr) {
 
     
   // print message
-  printf("success\n");
+  printf("ok\n");
   fflush(stdout);
   
   // avoid compiler warnings

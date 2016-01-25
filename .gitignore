@@ -21,8 +21,8 @@
 *.dylib
 
 # Executables
-*.exe
 STM8_serial_flasher
+*.exe
 *.out
 *.app
 *.i*86
@@ -35,6 +35,12 @@ doxygen/latex/*
 doxygen/man/*
 doxygen/rtf/*
 doxygen/xml/*
+
+# STM8 / bootloader manuals
+STM8_Datasheets/*
+
+# regression list 
+tool_validation.*
 
 # Others
 .DS_Store
@@ -49,7 +55,5 @@ doxygen/xml/*
 *.pdb
 *.wdb
 *.wed
-
 *.cdb
-
 *.ihx
