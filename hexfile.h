@@ -32,5 +32,15 @@ void convert_s19(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
 // convert intel hex format in memory buffer to memory image
 void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image);
 
+
+// export RAM image to file in Motorola s19 format
+void export_s19(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes);
+
+// export RAM image to file in Intel hex format
+void export_hex(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes);
+
+// export RAM image to file with plain text table (hex addr / data)
+void export_txt(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes);
+
 #endif // _HEXFILE_H_
 

@@ -56,17 +56,19 @@
 
 
 // device dependent flash w/e routines
+#include "E_W_ROUTINEs_8K_verL_1.0.h"
 #include "E_W_ROUTINEs_32K_ver_1.0.h"
 #include "E_W_ROUTINEs_32K_ver_1.2.h"
 #include "E_W_ROUTINEs_32K_ver_1.3.h"
 #include "E_W_ROUTINEs_32K_ver_1.4.h"
+//#include "E_W_ROUTINEs_32K_verL_1.0.h"  // empty
 #include "E_W_ROUTINEs_128K_ver_2.0.h"
 #include "E_W_ROUTINEs_128K_ver_2.1.h"
 #include "E_W_ROUTINEs_128K_ver_2.2.h"
 #include "E_W_ROUTINEs_128K_ver_2.4.h"
 #include "E_W_ROUTINEs_256K_ver_1.0.h"
 
-
+// buffer sizes
 #define  STRLEN   1000
 #define  BUFSIZE  1000000
 
@@ -95,7 +97,10 @@ int main(int argc, char ** argv) {
   uint8_t   pauseOnLaunch;        // prompt for <return> prior to upload
   int       flashsize;            // size of flash (kB) for w/e routines
   uint8_t   versBSL;              // BSL version for w/e routines
-  char      hexfile[STRLEN];      // name of file to flash
+  uint8_t   family;               // device family, currently STM8A/S and STM8L
+  char      fileUpload[STRLEN];   // name of file to upload from
+  int       addrStart, addrStop;  // start and end address to read
+  char      fileDownload[STRLEN]; // name of file to download to
   HANDLE    ptrPort;              // handle to communication port
   char      buf[BUFSIZE];         // buffer for hexfiles
   char      image[BUFSIZE];       // memory image buffer
@@ -118,15 +123,17 @@ int main(int argc, char ** argv) {
   jumpFlash  = 1;               // jump to flash after uploade
   pauseOnLaunch = 1;            // prompt for return prior to upload
   enableBSL  = 1;               // enable bootloader after upload
-  hexfile[0] = '\0';            // no default hexfile
+  fileUpload[0] = '\0';         // no default file to upload to flash
+  fileDownload[0] = '\0';       // no default file to download from flash
+  addrStart = addrStop = 0;     // 
   
   // for debugging only
   //sprintf(portname, "/dev/tty.usbserial-A4009I0O");
 
   // required for strncpy()
-  portname[STRLEN-1]  = '\0';
-  hexfile[STRLEN-1]   = '\0';
-    
+  portname[STRLEN-1]     = '\0';
+  fileUpload[STRLEN-1]   = '\0';
+  fileDownload[STRLEN-1] = '\0';
     
   // reset console color (needs to be called once for Win32)      
   setConsoleColor(PRM_COLOR_DEFAULT);
@@ -154,10 +161,17 @@ int main(int argc, char ** argv) {
       g_UARTmode = j;
     }
 
-    // name of hexfile
+    // name of file to upload
     else if (!strcmp(argv[i], "-f"))
-      strncpy(hexfile, argv[++i], STRLEN-1);
+      strncpy(fileUpload, argv[++i], STRLEN-1);
 
+    // memory range to read and file to save to
+    else if (!strcmp(argv[i], "-d")) {
+      sscanf(argv[++i],"%x",&addrStart);
+      sscanf(argv[++i],"%x",&addrStop);
+      strncpy(fileDownload, argv[++i], STRLEN-1);
+    }
+    
     // HW reset STM8 via DTR line (RS232/USB) or GPIO18 (Raspi only)
     else if (!strcmp(argv[i], "-r")) {
       sscanf(argv[++i], "%d", &j);
@@ -193,22 +207,23 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-r ch] [-x] [-j] [-Q] [-q] [-v]\n\n", appname);
-      printf("  -h        print this help\n");
-      printf("  -p port   name of communication port (default: list all ports and query)\n");
-      printf("  -b rate   communication baudrate in Baud (default: 230400)\n");
-      printf("  -u mode   UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
-      printf("  -f file   name of s19 or intel-hex file to flash (default: none)\n");
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-d start stop file] [-r ch] [-x] [-j] [-Q] [-q] [-v]\n\n", appname);
+      printf("  -h                   print this help\n");
+      printf("  -p port              name of communication port (default: list all ports and query)\n");
+      printf("  -b rate              communication baudrate in Baud (default: 230400)\n");
+      printf("  -u mode              UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
+      printf("  -f file              upload s19 or intel-hex file to flash (default: skip)\n");
+      printf("  -d start stop file   read memory range (in hex) to s19 or table file (default: skip)\n");
       #ifdef __ARMEL__
-        printf("  -r ch     reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
+        printf("  -r ch                reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
       #else
-        printf("  -r ch     reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
+        printf("  -r ch                reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
       #endif
-      printf("  -x        don't enable ROM bootloader after upload (default: enable)\n");
-      printf("  -j        don't jump to flash after upload (default: jump to flash)\n");
-      printf("  -Q        don't prompt for <return> prior to upload (default: prompt)\n");
-      printf("  -q        prompt for <return> prior to exit (default: no prompt)\n");
-      printf("  -v        verbose output\n");
+      printf("  -x                   don't enable ROM bootloader after upload (default: enable)\n");
+      printf("  -j                   don't jump to flash after upload (default: jump to flash)\n");
+      printf("  -Q                   don't prompt for <return> prior to upload (default: prompt)\n");
+      printf("  -q                   prompt for <return> prior to exit (default: no prompt)\n");
+      printf("  -v                   verbose output\n");
       printf("\n");
       Exit(0, 0);
     }
@@ -237,29 +252,29 @@ int main(int argc, char ** argv) {
   } // if no comm port name
 
   // If specified import hexfile - do it early here to be able to report file read errors before others
-  if (strlen(hexfile)>0) {
-    const char *shortname = strrchr(hexfile, '/');
+  if (strlen(fileUpload)>0) {
+    const char *shortname = strrchr(fileUpload, '/');
     if (!shortname)
-      shortname = hexfile;
+      shortname = fileUpload;
 
     // convert to memory image, depending on file type
-    const char *dot = strrchr (hexfile, '.');
+    const char *dot = strrchr (fileUpload, '.');
     if (dot && !strcmp(dot, ".s19")) {
       if (g_verbose)
         printf("  load Motorola S-record file '%s' ... ", shortname);
-      load_hexfile(hexfile, buf, BUFSIZE);
+      load_hexfile(fileUpload, buf, BUFSIZE);
       convert_s19(buf, &imageStart, &numBytes, image);
     }
     else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
       if (g_verbose)
         printf("  load Intel hex file '%s' ... ", shortname);
-      load_hexfile(hexfile, buf, BUFSIZE);
+      load_hexfile(fileUpload, buf, BUFSIZE);
       convert_hex(buf, &imageStart, &numBytes, image);
     }
     else {
       if (g_verbose)
         printf("  load binary file '%s' ... ", shortname);
-      load_binfile(hexfile, image, &imageStart, &numBytes, BUFSIZE);
+      load_binfile(fileUpload, image, &imageStart, &numBytes, BUFSIZE);
     }
   }
 
@@ -341,93 +356,150 @@ int main(int argc, char ** argv) {
   
   // synchronize baudrate
   bsl_sync(ptrPort);
+
   
-  // get bootloader info for selecting flash w/e routines
-  bsl_getInfo(ptrPort, &flashsize, &versBSL);
+  // for file upload to flash upload some flash code to RAM
+  if (strlen(fileUpload)>0) {
+  
+    // get bootloader info for selecting flash w/e routines
+    bsl_getInfo(ptrPort, &flashsize, &versBSL, &family);
 
-  // select device dependent flash routines for upload
-  if ((flashsize==32) && (versBSL==0x10)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_0_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_0_s19_len]=0;
-  }
-  else if ((flashsize==32) && (versBSL==0x12)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_2_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_2_s19_len]=0;
-  }
-  else if ((flashsize==32) && (versBSL==0x13)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_3_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_3_s19_len]=0;
-  }
-  else if ((flashsize==32) && (versBSL==0x14)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_4_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_4_s19_len]=0;
-  }
-  else if ((flashsize==128) && (versBSL==0x20)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_0_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_0_s19_len]=0;
-  }
-  else if ((flashsize==128) && (versBSL==0x21)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_1_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_1_s19_len]=0;
-  }
-  else if ((flashsize==128) && (versBSL==0x22)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_2_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_2_s19_len]=0;
-  }
-  else if ((flashsize==128) && (versBSL==0x24)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_4_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_4_s19_len]=0;
-  }
-  else if ((flashsize==256) && (versBSL==0x10)) {
-    ptr = (char*) STM8_Routines_E_W_ROUTINEs_256K_ver_1_0_s19;
-    ptr[STM8_Routines_E_W_ROUTINEs_256K_ver_1_0_s19_len]=0;
-  }
-  else {
-    setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror: unsupported device, exit!\n\n");
-    Exit(1, g_pauseOnExit);
-  }
+    // for STM8A/S and 8kB STM8L upload RAM routines, else skip
+    if ((family == STM8AS) || (flashsize==8)) {
+  
+      // select device dependent flash routines for upload
+      if ((flashsize==8) && (versBSL==0x10)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_8K_verL_1_0_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_8K_verL_1_0_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_8K_verL_1_0_s19_len]=0;
+      }
+      else if ((flashsize==32) && (versBSL==0x10)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_32K_ver_1_0_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_0_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_0_s19_len]=0;
+      }
+      else if ((flashsize==32) && (versBSL==0x12)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_32K_ver_1_2_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_2_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_2_s19_len]=0;
+      }
+      else if ((flashsize==32) && (versBSL==0x13)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_32K_ver_1_3_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_3_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_3_s19_len]=0;
+      }
+      else if ((flashsize==32) && (versBSL==0x14)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_32K_ver_1_4_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_ver_1_4_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_32K_ver_1_4_s19_len]=0;
+      }
+      else if ((flashsize==128) && (versBSL==0x20)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_128K_ver_2_0_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_0_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_0_s19_len]=0;
+      }
+  /*
+      else if ((flashsize==128) && (versBSL==0x20)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_32K_verL_1_0_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_32K_verL_1_0_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_32K_verL_1_0_s19_len]=0;
+      }
+  */
+      else if ((flashsize==128) && (versBSL==0x21)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_128K_ver_2_1_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_1_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_1_s19_len]=0;
+      }
+      else if ((flashsize==128) && (versBSL==0x22)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_128K_ver_2_2_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_2_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_2_s19_len]=0;
+      }
+      else if ((flashsize==128) && (versBSL==0x24)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_128K_ver_2_4_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_128K_ver_2_4_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_128K_ver_2_4_s19_len]=0;
+      }
+      else if ((flashsize==256) && (versBSL==0x10)) {
+        #ifdef DEBUG
+          printf("header STM8_Routines_E_W_ROUTINEs_256K_ver_1_0_s19 \n");
+        #endif
+        ptr = (char*) STM8_Routines_E_W_ROUTINEs_256K_ver_1_0_s19;
+        ptr[STM8_Routines_E_W_ROUTINEs_256K_ver_1_0_s19_len]=0;
+      }
+      else {
+        setConsoleColor(PRM_COLOR_RED);
+        fprintf(stderr, "\n\nerror: unsupported device, exit!\n\n");
+        Exit(1, g_pauseOnExit);
+      }
+  
+      {
+        char      ramImage[8192];
+        uint32_t  ramImageStart;
+        uint32_t  numRamBytes;
+  
+        convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
+  
+        if (g_verbose)
+          printf("  Uploading RAM routines ... ");
+        bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
+        if (g_verbose)
+          printf("ok\n");
+      }
+    
+    } // if family == STM8AF
 
-  {
-    char      ramImage[8192];
-    uint32_t  ramImageStart;
-    uint32_t  numRamBytes;
 
-    convert_s19(ptr, &ramImageStart, &numRamBytes, ramImage);
+    // if specified upload hexfile
+    if (strlen(fileUpload)>0)
+      bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
 
-    if (g_verbose)
-      printf("  Uploading RAM routines ...");
-    bsl_memWrite(ptrPort, ramImageStart, numRamBytes, ramImage, 0);
-    if (g_verbose)
-      printf("ok\n");
-  }
-
-
-  // if specified upload hexfile
-  if (strlen(hexfile)>0)
-    bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
-
+  
+    // enable ROM bootloader after upload (option bytes always on same address)
+    if (enableBSL==1) {
+      if (g_verbose)
+        printf("  activate bootloader ... ");
+      bsl_memWrite(ptrPort, 0x487E, 2, (char*)"\x55\xAA", 0);
+      if (g_verbose)
+        printf("ok\n");
+    }
+  
+  
+    // jump to flash start address after upload (reset vector always on same address)
+    if (jumpFlash)
+      bsl_jumpTo(ptrPort, 0x8000);
+  
+  } // if upload to flash
+  
   
   // memory read
-  //imageStart = 0x8000;  numBytes = 128*1024;   // complete 128kB flash
-  //imageStart = 0x00A0;  numBytes = 352;        // RAM
-  //bsl_memRead(ptrPort, imageStart, numBytes, image);
+  /*
+  bsl_memRead(ptrPort,addrStart,addrStop-addrStart+1, image);
+  export_txt(fileDownload, image, addrStart, addrStop-addrStart+1);
+  export_s19(fileDownload, image, addrStart, addrStop-addrStart+1);
+  */
   
-  
-  // enable ROM bootloader after upload (option bytes always on same address)
-  if (enableBSL==1) {
-    if (g_verbose)
-      printf("  activate bootloader ... ");
-    bsl_memWrite(ptrPort, 0x487E, 2, (char*)"\x55\xAA", 0);
-    if (g_verbose)
-      printf("ok\n");
-  }
-  
-  // jump to flash start address after upload (reset vector always on same address)
-  if (jumpFlash)
-    bsl_jumpTo(ptrPort, 0x8000);
-  
-  
+
   ////////
   // clean up and exit
   ////////

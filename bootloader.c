@@ -118,13 +118,14 @@ uint8_t bsl_sync(HANDLE ptrPort) {
   \param[in]  ptrPort     handle to communication port
   \param[out] flashsize   size of flashsize in kB (required for correct W/E routines)
   \param[out] vers        BSL version number (required for correct W/E routines)
+  \param[out] family      STM8 family (STM8A/L=1, STM8L=2)
   
   \return communication status (0=ok, 1=fail)
   
   query microcontroller type and BSL version info. This information is required
   to select correct version of flash write/erase routines
 */
-uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
+uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *family) {
   
   int   i;
   int   lenTx, lenRx, len;
@@ -158,8 +159,30 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
   /////////
 
   // reduce timeout for faster check
-  set_timeout(ptrPort, 100);
+  set_timeout(ptrPort, 200);
   
+  // check address of EEPROM. STM8L starts at 0x1000, STAM8A/S starts at 0x4000
+  if (bsl_memCheck(ptrPort, 0x004000))       // STM8A/S
+  {
+    *family = STM8AS;
+#ifdef DEBUG
+    printf("family STM8A/S\n");
+#endif
+  }
+  else if (bsl_memCheck(ptrPort, 0x00100))   // STM8L
+  {
+    *family = STM8L;
+#ifdef DEBUG
+    printf("family STM8L\n");
+#endif
+  }
+  else {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_getInfo()': cannot identify family, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+
+
   // check if adress in flash exists. Check highest flash address to determine size
   if (bsl_memCheck(ptrPort, 0x047FFF))       // extreme density (256kB)
     *flashsize = 256;
@@ -174,7 +197,11 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
     fprintf(stderr, "\n\nerror in 'bsl_getInfo()': cannot identify device, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
+#ifdef DEBUG
+  printf("flash size: %d\n", (int) (*flashsize));
+#endif
   
+
   // restore timeout to avoid timeouts during flash operation
   set_timeout(ptrPort, 1000);
   
@@ -240,9 +267,8 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
     Exit(1, g_pauseOnExit);
   }
   
-  
-  // print BSL data
-  /*
+// print BSL data
+#ifdef DEBUG
   printf("    version 0x%02x\n", Rx[2]);
   printf("    command codes:\n");
   printf("      GET   0x%02x\n", Rx[3]);
@@ -251,15 +277,17 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers) {
   printf("      WRITE 0x%02x\n", Rx[6]);
   printf("      ERASE 0x%02x\n", Rx[7]);
   fflush(stdout);
-  */
-  
-  
+#endif
+
   // copy version number
   *vers = Rx[2];
   
   // print message
   if (g_verbose) {
-    printf("ok (%dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
+    if (*family == STM8AS)
+      printf("ok (STM8A/S; %dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
+    else
+      printf("ok (STM8L; %dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
     fflush(stdout);
   }
   
@@ -453,6 +481,7 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
   printf("ok\n");
   fflush(stdout);
   
+  
   // debug: print buffer
   /*
   printf("\n");
@@ -463,6 +492,7 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
   printf("\n");
   fflush(stdout);
   */
+  
   
   // avoid compiler warnings
   return(0);

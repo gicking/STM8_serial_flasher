@@ -534,3 +534,120 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   
 } // convert_hex
 
+  
+
+/**
+   \fn void export_s19(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes)
+   
+   \brief export RAM image to file in Motorola s19 format
+   
+   \param[in]  outfile    filename to output to
+   \param[in]  buf        RAM image to save
+   \param[in]  addrStart  first address to export
+   \param[in]  numBytes   number of bytes to export
+   
+   export RAM image to file in s19 hexfile format. For description of 
+   Motorola S19 file format see http://en.wikipedia.org/wiki/SREC_(file_format)
+*/
+void export_s19(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes) {
+
+  int       i, j;                 // loop variables
+  int       lenLine;
+  uint8_t   data;
+  uint32_t  chk;                  // checksum
+  FILE      *fp;                  // file pointer
+
+  // open output file
+  fp=fopen(outfile,"w");
+  if (!fp) {
+    fprintf(stderr, "\n\nerror in 'export_s19()': cannot create file '%s', exit!\n\n", outfile);
+    Exit(1, g_pauseOnExit);
+  }
+
+  // store in lines of 32B
+  lenLine = 32;
+  for (i=0; i<=numBytes; i+=lenLine) {
+
+    // save line (see http://en.wikipedia.org/wiki/SREC_(file_format) )
+    fprintf(fp, "S1%02X%04X", lenLine+3, addrStart+i); // 2B addr + data + 1B chk
+    chk = (uint8_t) (lenLine+3) + (uint8_t) (addrStart+i) + ((uint8_t) (addrStart+i) >> 8);
+    for (j=0; j<lenLine; j++) {
+      data = (uint8_t) (buf[i+j]);
+      chk += data;
+      fprintf(fp, "%02X", data);
+    }
+    chk = ((chk & 0xFF) ^ 0xFF);
+    fprintf(fp, "%02X\n", chk);
+
+  } // loop over lines
+
+  // attach generic EOF line
+  fprintf(fp, "S903FFFFFE\n");
+  
+  // close output file
+  fflush(fp);
+  fclose(fp);
+
+} // export_s19
+
+  
+
+/**
+   \fn void export_hex(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes)
+   
+   \brief export RAM image to file in Intel hex format
+   
+   \param[in]  outfile    filename to output to
+   \param[in]  buf        RAM image to save
+   \param[in]  addrStart  first address to export
+   \param[in]  numBytes   number of bytes to export
+   
+   export RAM image to file in intel hexfile format. For description of 
+   Intel hex file format see http://en.wikipedia.org/wiki/Intel_HEX
+*/
+void export_hex(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes) {
+
+  // to be done
+  fprintf(stderr, "\n\nerror in 'export_hex()': Intel Hex output not yet supported, exit!\n\n");
+  Exit(1, g_pauseOnExit);
+
+} // export_hex
+
+  
+
+/**
+   \fn void export_txt(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes)
+   
+   \brief export RAM image to file with plain text table (hex addr / data)
+   
+   \param[in]  outfile    filename to output to
+   \param[in]  buf        RAM image to save
+   \param[in]  addrStart  first address to export
+   \param[in]  numBytes   number of bytes to export
+   
+   export RAM image to file with plain text table (hex addr / data)
+*/
+void export_txt(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes) {
+
+  int       i;                 // index
+  FILE      *fp;               // file pointer
+
+  // open output file
+  fp=fopen(outfile,"w");
+  if (!fp) {
+    fprintf(stderr, "\n\nerror in 'export_s19()': cannot create file '%s', exit!\n\n", outfile);
+    Exit(1, g_pauseOnExit);
+  }
+
+  // store each value in separate line (addr value)
+  for (i=0; i<numBytes; i++) {
+    fprintf(fp, "0x%04x	0x%02x\n", (int) (addrStart+i), (uint8_t) (buf[i]));
+  }
+  
+  // close output file
+  fflush(fp);
+  fclose(fp);
+
+} // export_txt
+
+// end of file

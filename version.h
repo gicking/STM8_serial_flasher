@@ -19,7 +19,7 @@
 #define _SW_VERSION_H_
 
 /// 16b SW version identifier 
-#define VERSION     ((1<<14) | (1<<6) | (0<<1) | 1)     // -> v1.1.0
+#define VERSION     ((1<<14) | (1<<6) | (1<<1) | 1)     // -> v1.1.1
 
 #endif // _SW_VERSION_H_
 
@@ -27,9 +27,12 @@
 /********************
  *  add description of changes below
 
+  v1.1.1 (2016-02-02)
+    - add support for STM8L family (skip RAM code upload)
+
   v1.1.0 (2015-06-13)
     - add support for flashing via Raspberry UART
-    - and optional reset of STM8 via DTR pin (USB/RS232) / GPIO (Raspberry)
+    - add optional reset of STM8 via DTR pin (USB/RS232) / GPIO (Raspberry)
 
   v1.0.0 (2014-12-21)
     - first release. Start of revision history

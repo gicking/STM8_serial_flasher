@@ -23,6 +23,10 @@
 #include "serial_comm.h"
 
 
+// STM8 family
+#define STM8AS  1
+#define STM8L   2
+
 // BSL command codes
 #define GET     0x00      // gets version and commands supported by the BSL
 #define READ    0x11      // read up to 256 bytes of memory 
@@ -41,7 +45,7 @@
 uint8_t bsl_sync(HANDLE ptrPort);
 
 /// get microcontroller type and BSL version
-uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers);
+uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *family);
 
 /// read from microcontroller memory
 uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf);

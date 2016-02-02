@@ -78,8 +78,8 @@ void list_ports(void) {
     i = 1;
     while((ent = readdir(dir)) != NULL) {
       
-      // FTDI FT232 based USB-RS232 adapter (MacOS X)
-      if (strstr(ent->d_name, "tty.usbserial")) {
+      // FTDI FT232 or CH340 based USB-RS232 adapter (MacOS X)
+      if (strstr(ent->d_name, "tty.") && strstr(ent->d_name, "usbserial")) {
         if (i!=1) printf(", ");
         printf("/dev/%s", ent->d_name);
         i++;
@@ -98,7 +98,7 @@ void list_ports(void) {
         printf("/dev/%s", ent->d_name);
         i++;
       }
-
+      
       // direct UART under Raspberry Pi / Raspbian
       if (strstr(ent->d_name, "ttyAMA")) {
         if (i!=1) printf(", ");
