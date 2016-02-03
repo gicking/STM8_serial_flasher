@@ -29,6 +29,7 @@
 // OS specific: Win32
 #if defined(WIN32)
   #include <windows.h>
+  #include <malloc.h>
 
 // OS specific: Posix
 #elif defined(__APPLE__) || defined(__unix__)
@@ -70,7 +71,7 @@
 
 // buffer sizes
 #define  STRLEN   1000
-#define  BUFSIZE  1000000
+#define  BUFSIZE  10000000
 
 
 
@@ -94,23 +95,33 @@ int main(int argc, char ** argv) {
   uint8_t   resetSTM8;            // 0=no reset; 1=HW reset via DTR (RS232/USB) or GPIO18 (Raspi); 2=SW reset by sending 0x55+0xAA
   uint8_t   enableBSL;            // don't enable ROM bootloader after upload (caution!)
   uint8_t   jumpFlash;            // jump to flash after upload
+  uint8_t   verifyUpload;         // verify memory after upload
   uint8_t   pauseOnLaunch;        // prompt for <return> prior to upload
+  HANDLE    ptrPort;              // handle to communication port
+  char      *ptr=NULL;            // pointer to memory
+  int       i, j;                 // generic variables  
+  char      buf[1000];            // misc buffer
+  //char      Tx[100], Rx[100];     // debug: buffer for tests
+  
+  // STM8 propoerties
   int       flashsize;            // size of flash (kB) for w/e routines
   uint8_t   versBSL;              // BSL version for w/e routines
   uint8_t   family;               // device family, currently STM8A/S and STM8L
-  char      fileUpload[STRLEN];   // name of file to upload from
-  int       addrStart, addrStop;  // start and end address to read
-  char      fileDownload[STRLEN]; // name of file to download to
-  HANDLE    ptrPort;              // handle to communication port
-  char      buf[BUFSIZE];         // buffer for hexfiles
-  char      image[BUFSIZE];       // memory image buffer
-  uint32_t  imageStart;           // starting address of image
-  uint32_t  numBytes;             // number of bytes in image
-  char      *ptr=NULL;            // pointer to memory
-  int       i, j;                 // generic variables  
-  //char      Tx[100], Rx[100];     // debug: buffer for tests
   
+  // for upload to flash
+  char      fileIn[STRLEN];       // name of file to upload to STM8
+  char      *fileBufIn;           // buffer for hexfiles
+  char      *imageIn;             // memory buffer for upload hexfile
+  uint32_t  imageInStart;         // starting address of imageIn
+  uint32_t  imageInBytes;         // number of bytes in imageIn
+  
+  // for download from flash
+  char      fileOut[STRLEN];      // name of file to download from STM8
+  char      *imageOut;            // memory buffer for download hexfile
+  uint32_t  imageOutStart;        // starting address of imageOut
+  uint32_t  imageOutBytes;        // number of bytes in imageOut
 
+  
   // initialize global variables
   g_verbose     = false;        // g_verbose output when requested only
   g_pauseOnExit = 0;            // no wait for <return> before terminating
@@ -123,21 +134,28 @@ int main(int argc, char ** argv) {
   jumpFlash  = 1;               // jump to flash after uploade
   pauseOnLaunch = 1;            // prompt for return prior to upload
   enableBSL  = 1;               // enable bootloader after upload
-  fileUpload[0] = '\0';         // no default file to upload to flash
-  fileDownload[0] = '\0';       // no default file to download from flash
-  addrStart = addrStop = 0;     // 
+  verifyUpload = 1;             // verify memory content after upload
+  fileIn[0] = '\0';             // no default file to upload to flash
+  fileOut[0] = '\0';            // no default file to download from flash
   
-  // for debugging only
-  //sprintf(portname, "/dev/tty.usbserial-A4009I0O");
-
   // required for strncpy()
-  portname[STRLEN-1]     = '\0';
-  fileUpload[STRLEN-1]   = '\0';
-  fileDownload[STRLEN-1] = '\0';
+  portname[STRLEN-1] = '\0';
+  fileIn[STRLEN-1]   = '\0';
+  fileOut[STRLEN-1]  = '\0';
     
+  // allocate buffers (can't be static for large buffers)
+  imageIn   = (char*) malloc(BUFSIZE);
+  imageOut  = (char*) malloc(BUFSIZE);
+  fileBufIn = (char*) malloc(BUFSIZE);
+  if ((!imageIn) || (!imageOut) || (!fileBufIn)) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror: cannot allocate memory buffers, exit!\n\n");
+    Exit(1, 1);
+  }
+  
+  
   // reset console color (needs to be called once for Win32)      
   setConsoleColor(PRM_COLOR_DEFAULT);
-
 
   ////////
   // parse commandline arguments
@@ -148,55 +166,82 @@ int main(int argc, char ** argv) {
     //printf("arg %d: '%s'\n", (int) i, argv[i]);
     
     // name of communication port
-    if (!strcmp(argv[i], "-p"))
-      strncpy(portname, argv[++i], STRLEN-1);
+    if (!strcmp(argv[i], "-p")) {
+      if (i<argc-1)
+        strncpy(portname, argv[++i], STRLEN-1);
+    }
 
     // communication baudrate
-    else if (!strcmp(argv[i], "-b"))
-      sscanf(argv[++i],"%d",&baudrate);
-
+    else if (!strcmp(argv[i], "-b")) {
+      if (i<argc-1)
+        sscanf(argv[++i],"%d",&baudrate);
+    }
+    
     // UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
     else if (!strcmp(argv[i], "-u")) {
-      sscanf(argv[++i], "%d", &j);
-      g_UARTmode = j;
+      if (i<argc-1) {
+        sscanf(argv[++i], "%d", &j);
+        g_UARTmode = j;
+      }
     }
 
-    // name of file to upload
-    else if (!strcmp(argv[i], "-f"))
-      strncpy(fileUpload, argv[++i], STRLEN-1);
-
-    // memory range to read and file to save to
-    else if (!strcmp(argv[i], "-d")) {
-      sscanf(argv[++i],"%x",&addrStart);
-      sscanf(argv[++i],"%x",&addrStop);
-      strncpy(fileDownload, argv[++i], STRLEN-1);
-    }
-    
     // HW reset STM8 via DTR line (RS232/USB) or GPIO18 (Raspi only)
-    else if (!strcmp(argv[i], "-r")) {
-      sscanf(argv[++i], "%d", &j);
-      resetSTM8 = j;
+    else if (!strcmp(argv[i], "-R")) {
+      if (i<argc-1) {
+        sscanf(argv[++i], "%d", &j);
+        resetSTM8 = j;
+      }
     }
     
-    // don't enable ROM bootloader after upload (caution!)
-    else if (!strcmp(argv[i], "-x"))
-      enableBSL = 0;
+    // name of file to upload
+    else if (!strcmp(argv[i], "-w")) {
+      if (i<argc-1)
+        strncpy(fileIn, argv[++i], STRLEN-1);
+    }
 
+    // don't enable ROM bootloader after upload (caution!)
+    else if (!strcmp(argv[i], "-x")) {
+      enableBSL = 0;
+    }
+
+    // skip verify memory content after upload
+    else if (!strcmp(argv[i], "-v")) {
+      verifyUpload = 0;
+    }
+    
+    // memory range to read and file to save to
+    else if (!strcmp(argv[i], "-r")) {
+      if (i<argc-1) {
+        sscanf(argv[++i],"%x",&j);
+        imageOutStart = j;
+      }
+      if (i<argc-1) {
+        sscanf(argv[++i],"%x",&j);
+        imageOutBytes = j - imageOutStart + 1;
+      }
+      if (i<argc-1)
+        strncpy(fileOut, argv[++i], STRLEN-1);
+    }
+    
     // don't jump to address after upload
-    else if (!strcmp(argv[i], "-j"))
+    else if (!strcmp(argv[i], "-j")) {
       jumpFlash = 0;
+    }
 
     // don't prompt for <return> prior to upload
-    else if (!strcmp(argv[i], "-Q"))
+    else if (!strcmp(argv[i], "-Q")) {
       pauseOnLaunch = 0;
+    }
 
     // prompt for <return> prior to exit
-    else if (!strcmp(argv[i], "-q"))
+    else if (!strcmp(argv[i], "-q")) {
       g_pauseOnExit = 1;
+    }
 
     // g_verbose output
-    else if (!strcmp(argv[i], "-v"))
+    else if (!strcmp(argv[i], "-V")) {
       g_verbose = true;
+    }
 
     // else print list of commandline arguments and language commands
     else {
@@ -207,23 +252,25 @@ int main(int argc, char ** argv) {
       else
         appname = argv[0];
       printf("\n");
-      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-f file] [-d start stop file] [-r ch] [-x] [-j] [-Q] [-q] [-v]\n\n", appname);
-      printf("  -h                   print this help\n");
-      printf("  -p port              name of communication port (default: list all ports and query)\n");
-      printf("  -b rate              communication baudrate in Baud (default: 230400)\n");
-      printf("  -u mode              UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
-      printf("  -f file              upload s19 or intel-hex file to flash (default: skip)\n");
-      printf("  -d start stop file   read memory range (in hex) to s19 or table file (default: skip)\n");
+
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-R ch] [-w infile] [-x] [-v] [-r start stop outfile] [-j] [-Q] [-q] [-V]\n", appname);
+      printf("  -h                     print this help\n");
+      printf("  -p port                name of communication port (default: list available ports)\n");
+      printf("  -b rate                communication baudrate in Baud (default: 230400)\n");
+      printf("  -u mode                UART mode: 0=duplex, 1=1-wire reply, 2=2-wire reply (default: duplex)\n");
       #ifdef __ARMEL__
-        printf("  -r ch                reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
+        printf("  -R ch                  reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud, 3=GPIO18 pin (Raspi) (default: no reset)\n");
       #else
-        printf("  -r ch                reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
+        printf("  -R ch                  reset STM8: 1=DTR line (RS232), 2=send 'Re5eT!' @ 115.2kBaud (default: no reset)\n");
       #endif
-      printf("  -x                   don't enable ROM bootloader after upload (default: enable)\n");
-      printf("  -j                   don't jump to flash after upload (default: jump to flash)\n");
-      printf("  -Q                   don't prompt for <return> prior to upload (default: prompt)\n");
-      printf("  -q                   prompt for <return> prior to exit (default: no prompt)\n");
-      printf("  -v                   verbose output\n");
+      printf("  -w infile              upload s19 or intel-hex file to flash (default: skip)\n");
+      printf("    -x                   don't enable ROM bootloader after upload (default: enable)\n");
+      printf("    -v                   don't verify code in flash after upload (default: verify)\n");
+      printf("  -r start stop outfile  read memory range (in hex) to s19 file or table (default: skip)\n");
+      printf("  -j                     don't jump to flash before exit (default: jump to flash)\n");
+      printf("  -Q                     don't prompt for <return> prior to bootloader entry (default: prompt)\n");
+      printf("  -q                     prompt for <return> prior to exit (default: no prompt)\n");
+      printf("  -V                     verbose output\n");
       printf("\n");
       Exit(0, 0);
     }
@@ -251,42 +298,34 @@ int main(int argc, char ** argv) {
     getchar();
   } // if no comm port name
 
+
   // If specified import hexfile - do it early here to be able to report file read errors before others
-  if (strlen(fileUpload)>0) {
-    const char *shortname = strrchr(fileUpload, '/');
+  if (strlen(fileIn)>0) {
+    const char *shortname = strrchr(fileIn, '/');
     if (!shortname)
-      shortname = fileUpload;
+      shortname = fileIn;
 
     // convert to memory image, depending on file type
-    const char *dot = strrchr (fileUpload, '.');
+    const char *dot = strrchr (fileIn, '.');
     if (dot && !strcmp(dot, ".s19")) {
       if (g_verbose)
         printf("  load Motorola S-record file '%s' ... ", shortname);
-      load_hexfile(fileUpload, buf, BUFSIZE);
-      convert_s19(buf, &imageStart, &numBytes, image);
+      load_hexfile(fileIn, fileBufIn, BUFSIZE);
+      convert_s19(fileBufIn, &imageInStart, &imageInBytes, imageIn);
     }
     else if (dot && (!strcmp(dot, ".hex") || !strcmp(dot, ".ihx"))) {
       if (g_verbose)
         printf("  load Intel hex file '%s' ... ", shortname);
-      load_hexfile(fileUpload, buf, BUFSIZE);
-      convert_hex(buf, &imageStart, &numBytes, image);
+      load_hexfile(fileIn, fileBufIn, BUFSIZE);
+      convert_hex(fileBufIn, &imageInStart, &imageInBytes, imageIn);
     }
     else {
       if (g_verbose)
         printf("  load binary file '%s' ... ", shortname);
-      load_binfile(fileUpload, image, &imageStart, &numBytes, BUFSIZE);
+      load_binfile(fileIn, imageIn, &imageInStart, &imageInBytes, BUFSIZE);
     }
   }
 
-  ////////
-  // put STM8 into bootloader mode
-  ////////
-  if (pauseOnLaunch) {
-    printf("  activate STM8 bootloader and press <return>");
-    fflush(stdout);
-    fflush(stdin);
-    getchar();
-  }
 
   ////////
   // open port with given properties
@@ -320,8 +359,16 @@ int main(int argc, char ** argv) {
   
 
   ////////
-  // communicate with STM8 bootloader
+  // reset STM8
   ////////
+
+  // manually put STM8 into bootloader mode
+  if (pauseOnLaunch) {
+    printf("  activate STM8 bootloader and press <return>");
+    fflush(stdout);
+    fflush(stdin);
+    getchar();
+  }
 
   // HW reset STM8 using DTR line (USB/RS232)
   if (resetSTM8 == 1) {
@@ -354,14 +401,19 @@ int main(int argc, char ** argv) {
     }
   #endif // __ARMEL__
   
+
+  ////////
+  // communicate with STM8 bootloader
+  ////////
+
   // synchronize baudrate
   bsl_sync(ptrPort);
 
   
-  // for file upload to flash upload some flash code to RAM
-  if (strlen(fileUpload)>0) {
+  // if upload file to flash
+  if (strlen(fileIn)>0) {
   
-    // get bootloader info for selecting flash w/e routines
+    // get bootloader info for selecting RAM w/e routines for flash
     bsl_getInfo(ptrPort, &flashsize, &versBSL, &family);
 
     // for STM8A/S and 8kB STM8L upload RAM routines, else skip
@@ -467,14 +519,27 @@ int main(int argc, char ** argv) {
           printf("ok\n");
       }
     
-    } // if family == STM8AF
+    } // if STM8A/S or low-density STM8L -> upload RAM code
 
 
-    // if specified upload hexfile
-    if (strlen(fileUpload)>0)
-      bsl_memWrite(ptrPort, imageStart, numBytes, image, 1);
+    // upload memory image to STM8
+    bsl_memWrite(ptrPort, imageInStart, imageInBytes, imageIn, 1);
 
   
+    // optionally verify upload
+    if (verifyUpload==1) {
+      bsl_memRead(ptrPort, imageInStart, imageInBytes, imageOut, 1);
+      printf("  verify memory ... ");
+      for (i=0; i<imageInBytes; i++) {
+        if (imageIn[i] != imageOut[i]) {
+          printf("failed at address 0x%04x (0x%02x vs 0x%02x), exit!\n", (uint32_t) (imageInStart+i), (uint8_t) (imageIn[i]), (uint8_t) (imageOut[i]));
+          Exit(1, g_pauseOnExit);
+        }        
+      }
+      printf("ok\n");
+    }
+    
+    
     // enable ROM bootloader after upload (option bytes always on same address)
     if (enableBSL==1) {
       if (g_verbose)
@@ -484,21 +549,53 @@ int main(int argc, char ** argv) {
         printf("ok\n");
     }
   
-  
-    // jump to flash start address after upload (reset vector always on same address)
-    if (jumpFlash)
-      bsl_jumpTo(ptrPort, 0x8000);
-  
-  } // if upload to flash
+  } // if file upload to flash
   
   
-  // memory read
-  /*
-  bsl_memRead(ptrPort,addrStart,addrStop-addrStart+1, image);
-  export_txt(fileDownload, image, addrStart, addrStop-addrStart+1);
-  export_s19(fileDownload, image, addrStart, addrStop-addrStart+1);
-  */
   
+  ////////////////////
+  // read memory and dump to file
+  ////////////////////
+  if (strlen(fileOut)>0) {
+
+    const char *shortname = strrchr(fileOut, '/');
+    if (!shortname)
+      shortname = fileOut;
+
+    // read memory
+    bsl_memRead(ptrPort, imageOutStart, imageOutBytes, imageOut, 1);
+  
+    // save to file, depending on file type
+    const char *dot = strrchr (fileOut, '.');
+    if (dot && !strcmp(dot, ".s19")) {
+      if (g_verbose)
+        printf("  save as Motorola S-record file '%s' ... ", shortname);
+      else
+        printf("  save to '%s' ... ", shortname);
+      export_s19(fileOut, imageOut, imageOutStart, imageOutBytes);
+      printf("ok\n");
+    }
+    else if (dot && !strcmp(dot, ".txt")) {
+      if (g_verbose)
+        printf("  save as plain file to '%s' ... ", shortname);
+      else
+        printf("  save to '%s' ... ", shortname);
+      export_txt(fileOut, imageOut, imageOutStart, imageOutBytes);
+      printf("ok\n");
+    }
+    else {
+      setConsoleColor(PRM_COLOR_RED);
+      fprintf(stderr, "\n\nerror: unsupported export type '%s', exit!\n\n", dot);
+      Exit(1, g_pauseOnExit);
+    }
+  }
+  
+  
+
+  // jump to flash start address after done (reset vector always on same address)
+  if (jumpFlash)
+    bsl_jumpTo(ptrPort, 0x8000);
+
 
   ////////
   // clean up and exit

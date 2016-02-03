@@ -566,12 +566,12 @@ void export_s19(char *outfile, char *buf, uint32_t addrStart, uint32_t numBytes)
 
   // store in lines of 32B
   lenLine = 32;
-  for (i=0; i<=numBytes; i+=lenLine) {
+  for (i=0; i<numBytes; i+=lenLine) {
 
     // save line (see http://en.wikipedia.org/wiki/SREC_(file_format) )
     fprintf(fp, "S1%02X%04X", lenLine+3, addrStart+i); // 2B addr + data + 1B chk
-    chk = (uint8_t) (lenLine+3) + (uint8_t) (addrStart+i) + ((uint8_t) (addrStart+i) >> 8);
-    for (j=0; j<lenLine; j++) {
+    chk = (uint8_t) (lenLine+3) + (uint8_t) (addrStart+i) + (uint8_t) ((addrStart+i) >> 8);
+    for (j=0; (j<lenLine) && (j<numBytes); j++) {
       data = (uint8_t) (buf[i+j]);
       chk += data;
       fprintf(fp, "%02X", data);

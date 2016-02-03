@@ -312,7 +312,7 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *fami
   
   read from microcontroller memory via READ command
 */
-uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf) {
+uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf, uint8_t verbose) {
 
   int       i, lenTx, lenRx, len;
   char      Tx[1000], Rx[1000];
@@ -320,11 +320,13 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
 
 
   // print message
-  if (numBytes > 2048)
-    printf("  read %1.1fkB from 0x%04x (%1.1fkB) ... ", (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
-  else
-    printf("  read %dB from 0x%04x (%dB) ... ", numBytes, (int) addrStart, idx);
-  fflush(stdout);
+  if (verbose) {
+    if (numBytes > 1024)
+      printf("  read  %1.1fkB starting from 0x%04x ", (float) numBytes/1024.0, (int) addrStart);
+    else
+      printf("  read  %dB starting from 0x%04x ", numBytes, (int) addrStart);
+    fflush(stdout);
+  }
   
   // init receive buffer
   for (i=0; i<1000; i++)
@@ -463,23 +465,28 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
     }
     
     // print progress
-    if ((idx % 2048) == 0) {
-      if (numBytes > 1024)
-        printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ... ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
-      else
-        printf("%c  read %dB from 0x%04x (%dB) ... ", '\r', numBytes, (int) addrStart, idx);
-      fflush(stdout);
+    if (verbose) {
+      if ((idx % 1024) == 0) {
+        if (numBytes > 1024)
+          printf("%c  read  %1.1fkB starting from 0x%04x ", '\r', (float) idx/1024.0, (int) addrStart);
+        else
+          printf("%c  read  %dB starting from 0x%04x ", '\r', idx, (int) addrStart);
+        fflush(stdout);
+      }
     }
 
   } // loop over address range 
   
+  
   // print message
-  if (numBytes > 2048)
-    printf("%c  read %1.1fkB from 0x%04x (%1.1fkB) ... ", '\r', (float) numBytes/1024.0, (int) addrStart, (float) idx/1024.0);
-  else
-    printf("%c  read %dB from 0x%04x (%dB) ... ", '\r', numBytes, (int) addrStart, idx);
-  printf("ok\n");
-  fflush(stdout);
+  if (verbose) {
+    if (numBytes > 1024)
+      printf("%c  read  %1.1fkB starting from 0x%04x ... ", '\r', (float) idx/1024.0, (int) addrStart);
+    else
+      printf("%c  read  %dB starting from 0x%04x ... ", '\r', idx, (int) addrStart);
+    printf("ok\n");
+    fflush(stdout);
+  }
   
   
   // debug: print buffer
@@ -795,10 +802,10 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
 
   // print message
   if (verbose) {
-    if (numBytes > 2048)
-      printf("  upload %1.1fkB starting at 0x%04x ", (float) idx2/1024.0, (int) addrStart);
+    if (numBytes > 1024)
+      printf("  write %1.1fkB starting from 0x%04x ", (float) idx2/1024.0, (int) addrStart);
     else
-      printf("  upload %dB starting at 0x%04x ", idx2, (int) addrStart);
+      printf("  write %dB starting from 0x%04x ", idx2, (int) addrStart);
     fflush(stdout);
   }
   
@@ -952,10 +959,10 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
     
     // print progress
     if (((idx2 % 1024) == 0) && (verbose)){
-      if (numBytes > 2048)
-        printf("%c  upload %1.1fkB starting at 0x%04x ", '\r', (float) idx2/1024.0, (int) addrStart);
+      if (numBytes > 1024)
+        printf("%c  write %1.1fkB starting from 0x%04x ", '\r', (float) idx2/1024.0, (int) addrStart);
       else
-        printf("%c  upload %dB starting at 0x%04x ", '\r', idx2, (int) addrStart);
+        printf("%c  write %dB starting from 0x%04x ", '\r', idx2, (int) addrStart);
       fflush(stdout);
     }
 
@@ -963,10 +970,10 @@ uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char
   
   // print message
   if (verbose) {
-    if (numBytes > 2048)
-      printf("%c  upload %1.1fkB starting at 0x%04x ... ok   \n", '\r', (float) idx2/1024.0, (int) addrStart);
+    if (numBytes > 1024)
+      printf("%c  write %1.1fkB starting from 0x%04x ... ok   \n", '\r', (float) idx2/1024.0, (int) addrStart);
     else
-      printf("%c  upload %dB starting at 0x%04x ... ok   \n", '\r', idx2, (int) addrStart);
+      printf("%c  write %dB starting from 0x%04x ... ok   \n", '\r', idx2, (int) addrStart);
     fflush(stdout);
   }
   

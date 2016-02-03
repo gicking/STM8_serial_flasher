@@ -1,7 +1,7 @@
 STM8_serial_flasher
 -------------------
 
-A tool for uploading hexfiles to the STM8 microcontroller flash via COM port or USB using the built-in ROM bootloader (BSL) of the STM8. I wrote this tool, because the similar "Flash Loader Demonstrator" tool by STMicroelectronics supports Windows only.
+A tool for uploading hexfiles to the STM8 microcontroller flash and memory dump to file via COM port using the built-in ROM bootloader (BSL) of the STM8. I wrote this tool, because the similar "Flash Loader Demonstrator" tool by STMicroelectronics supports Windows only.
 
 Content:
   - STM8_serial_flasher -> program STM8 via bootloader and USB or UART interface
@@ -19,7 +19,13 @@ Georg
 Revision History
 ----------------
 
-1.0.0 (2014-12-21): initial release by Georg Icking-Konert under the Apache License 2.0
+1.1.1 (2016-02-03):
+  - add support for STM8L family (skip RAM code upload)
+  - add memory dump to file
 ----------------
-1.1.0 (2015-06-22): - add support for STM8 bootloader “reply mode“
-                    - add optional reset of STM8 via DTR (RS232/USB) or GPIO18 (Raspberry)
+1.1.0 (2015-06-22):
+  - add support for STM8 bootloader “reply mode“
+  - add optional reset of STM8 via DTR (RS232/USB) or GPIO18 (Raspberry)
+----------------
+1.0.0 (2014-12-21):
+  - initial release by Georg Icking-Konert under the Apache License 2.0

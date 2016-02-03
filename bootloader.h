@@ -48,7 +48,7 @@ uint8_t bsl_sync(HANDLE ptrPort);
 uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *family);
 
 /// read from microcontroller memory
-uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf);
+uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf, uint8_t verbose);
 
 /// check if address exists
 uint8_t bsl_memCheck(HANDLE ptrPort, uint32_t addr);

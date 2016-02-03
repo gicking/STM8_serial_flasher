@@ -27,8 +27,9 @@
 /********************
  *  add description of changes below
 
-  v1.1.1 (2016-02-02)
+  v1.1.1 (2016-02-03)
     - add support for STM8L family (skip RAM code upload)
+    - add memory dump to file
 
   v1.1.0 (2015-06-13)
     - add support for flashing via Raspberry UART
