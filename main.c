@@ -106,7 +106,7 @@ int main(int argc, char ** argv) {
   // STM8 propoerties
   int       flashsize;            // size of flash (kB) for w/e routines
   uint8_t   versBSL;              // BSL version for w/e routines
-  uint8_t   family;               // device family, currently STM8A/S and STM8L
+  uint8_t   family;               // device family, currently STM8S and STM8L
   
   // for upload to flash
   char      fileIn[STRLEN];       // name of file to upload to STM8
@@ -416,8 +416,8 @@ int main(int argc, char ** argv) {
     // get bootloader info for selecting RAM w/e routines for flash
     bsl_getInfo(ptrPort, &flashsize, &versBSL, &family);
 
-    // for STM8A/S and 8kB STM8L upload RAM routines, else skip
-    if ((family == STM8AS) || (flashsize==8)) {
+    // for STM8S and 8kB STM8L upload RAM routines, else skip
+    if ((family == STM8S) || (flashsize==8)) {
   
       // select device dependent flash routines for upload
       if ((flashsize==8) && (versBSL==0x10)) {
@@ -519,7 +519,7 @@ int main(int argc, char ** argv) {
           printf("ok\n");
       }
     
-    } // if STM8A/S or low-density STM8L -> upload RAM code
+    } // if STM8S or low-density STM8L -> upload RAM code
 
 
     // upload memory image to STM8

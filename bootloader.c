@@ -118,7 +118,7 @@ uint8_t bsl_sync(HANDLE ptrPort) {
   \param[in]  ptrPort     handle to communication port
   \param[out] flashsize   size of flashsize in kB (required for correct W/E routines)
   \param[out] vers        BSL version number (required for correct W/E routines)
-  \param[out] family      STM8 family (STM8A/L=1, STM8L=2)
+  \param[out] family      STM8 family (STM8S=1, STM8L=2)
   
   \return communication status (0=ok, 1=fail)
   
@@ -161,12 +161,12 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *fami
   // reduce timeout for faster check
   set_timeout(ptrPort, 200);
   
-  // check address of EEPROM. STM8L starts at 0x1000, STAM8A/S starts at 0x4000
-  if (bsl_memCheck(ptrPort, 0x004000))       // STM8A/S
+  // check address of EEPROM. STM8L starts at 0x1000, STM8S starts at 0x4000
+  if (bsl_memCheck(ptrPort, 0x004000))       // STM8S
   {
-    *family = STM8AS;
+    *family = STM8S;
 #ifdef DEBUG
-    printf("family STM8A/S\n");
+    printf("family STM8S\n");
 #endif
   }
   else if (bsl_memCheck(ptrPort, 0x00100))   // STM8L
@@ -284,8 +284,8 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *fami
   
   // print message
   if (g_verbose) {
-    if (*family == STM8AS)
-      printf("ok (STM8A/S; %dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
+    if (*family == STM8S)
+      printf("ok (STM8S; %dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
     else
       printf("ok (STM8L; %dkB flash; BSL v%x.%x)\n", *flashsize, (((*vers)&0xF0)>>4), ((*vers) & 0x0F));
     fflush(stdout);

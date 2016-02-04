@@ -24,7 +24,7 @@
 
 
 // STM8 family
-#define STM8AS  1
+#define STM8S   1
 #define STM8L   2
 
 // BSL command codes
