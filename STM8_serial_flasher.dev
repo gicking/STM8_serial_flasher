@@ -1,7 +1,7 @@
 [Project]
 FileName=STM8_serial_flasher.dev
 Name=STM8_serial_flasher
-UnitCount=20
+UnitCount=21
 Type=1
 Ver=2
 ObjFiles=
@@ -244,6 +244,16 @@ BuildCmd=
 FileName=STM8_Routines\E_W_ROUTINEs_256K_ver_1.0.h
 CompileCpp=0
 Folder=STM8_Routines
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit21]
+FileName=version.h
+CompileCpp=0
+Folder=
 Compile=1
 Link=1
 Priority=1000

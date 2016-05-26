@@ -40,6 +40,10 @@
 #define NACK    0x1F      // No acknowledge
 #define BUSY    0xAA      // Busy flag status
 
+#define PFLASH_START      0x8000    // starting address of flash (same for all STM8 devices)
+#define PFLASH_BLOCKSIZE  1024      // size of flash block for erase or block write (same for all STM8 devices)
+
+
 
 /// synchronize to microcontroller BSL
 uint8_t bsl_sync(HANDLE ptrPort);
@@ -54,7 +58,10 @@ uint8_t bsl_memRead(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char 
 uint8_t bsl_memCheck(HANDLE ptrPort, uint32_t addr);
 
 /// erase microcontroller flash sector
-uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr);
+uint8_t bsl_flashSectorErase(HANDLE ptrPort, uint32_t addr);
+
+/// mass erase microcontroller P- and D-flash
+uint8_t bsl_flashMassErase(HANDLE ptrPort);
 
 /// upload to microcontroller flash or RAM
 uint8_t bsl_memWrite(HANDLE ptrPort, uint32_t addrStart, uint32_t numBytes, char *buf, uint8_t verbose);

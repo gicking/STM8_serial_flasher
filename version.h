@@ -19,13 +19,16 @@
 #define _SW_VERSION_H_
 
 /// 16b SW version identifier 
-#define VERSION     ((1<<14) | (1<<6) | (1<<1) | 1)     // -> v1.1.1
+#define VERSION     ((1<<14) | (1<<6) | (2<<1) | 1)     // -> v1.1.2
 
 #endif // _SW_VERSION_H_
 
 
 /********************
  *  add description of changes below
+
+  v1.1.2 (2016-05-25)
+    - add optional flash mass erase prior to upload
 
   v1.1.1 (2016-02-03)
     - add support for STM8L family (skip RAM code upload)

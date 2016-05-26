@@ -122,7 +122,7 @@ void load_hexfile(const char *filename, char *buf, uint32_t bufsize) {
    
    \param[in]  filename   name of hexfile to read
    \param[out] buf        memory buffer containing file content (0-terminated)
-   \param[out] addrStart  starting address (fixed @ 0x8000)
+   \param[out] addrStart  starting address (fixed @ PFLASH_START)
    \param[out] numBytes   number of read bytes
    \param[in]  bufsize    max size of memory buffer
    
@@ -148,8 +148,8 @@ void load_binfile(const char *filename, char *buf, uint32_t *addrStart, uint32_t
   fread(buf, len, 1, fp);
   fclose(fp);
 
-  *addrStart = 0x8000;
-  *numBytes = len;
+  *addrStart = 0x8000;    // fixed for all STM8 devices
+  *numBytes  = len;
   
   // print message
   if (g_verbose) {

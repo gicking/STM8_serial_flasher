@@ -19,6 +19,9 @@ Georg
 Revision History
 ----------------
 
+v1.1.2 (2016-05-25)
+  - add optional flash mass erase prior to upload
+----------------
 1.1.1 (2016-02-03):
   - add support for STM8L family (skip RAM code upload)
   - add memory dump to file

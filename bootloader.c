@@ -155,7 +155,7 @@ uint8_t bsl_getInfo(HANDLE ptrPort, int *flashsize, uint8_t *vers, uint8_t *fami
   
   
   /////////
-  // determine device flash size for selecting w/e routines (flash starts at 0x8000)
+  // determine device flash size for selecting w/e routines (flash starts at PFLASH_START)
   /////////
 
   // reduce timeout for faster check
@@ -649,7 +649,7 @@ uint8_t bsl_memCheck(HANDLE ptrPort, uint32_t addr) {
 
 
 /**
-  \fn uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr)
+  \fn uint8_t bsl_flashSectorErase(HANDLE ptrPort, uint32_t addr)
    
   \brief erase one microcontroller flash sector
   
@@ -660,7 +660,7 @@ uint8_t bsl_memCheck(HANDLE ptrPort, uint32_t addr) {
   
   sector erase for microcontroller flash
 */
-uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
+uint8_t bsl_flashSectorErase(HANDLE ptrPort, uint32_t addr) {
 
   int       i;
   int       lenTx, lenRx, len;
@@ -668,7 +668,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   uint8_t   sector;
 
   // calculate sector code
-  sector = (addr - 0x8000)/1024;
+  sector = (addr - PFLASH_START)/PFLASH_BLOCKSIZE;
 
 
   // print message
@@ -687,7 +687,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   // check if port is open
   if (!ptrPort) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': port not open, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': port not open, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
   
@@ -706,7 +706,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   len = send_port(ptrPort, lenTx, Tx);
   if (len != lenTx) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': sending command failed, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': sending command failed, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
 
@@ -714,14 +714,14 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   len = receive_port(ptrPort, lenRx, Rx);
   if (len != lenRx) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': ACK1 timeout, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': ACK1 timeout, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
   
   // check acknowledge
   if (Rx[0]!=ACK) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': ACK1 failure, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': ACK1 failure, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
 
@@ -741,7 +741,7 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   len = send_port(ptrPort, lenTx, Tx);
   if (len != lenTx) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': sending sector failed, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': sending sector failed, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
 
@@ -754,14 +754,14 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   len = receive_port(ptrPort, lenRx, Rx);
   if (len != lenRx) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': ACK2 timeout, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': ACK2 timeout, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
   
   // check acknowledge
   if (Rx[0]!=ACK) {
     setConsoleColor(PRM_COLOR_RED);
-    fprintf(stderr, "\n\nerror in 'bsl_flashErase()': ACK2 failure, exit!\n\n");
+    fprintf(stderr, "\n\nerror in 'bsl_flashSectorErase()': ACK2 failure, exit!\n\n");
     Exit(1, g_pauseOnExit);
   }
 
@@ -773,7 +773,129 @@ uint8_t bsl_flashErase(HANDLE ptrPort, uint32_t addr) {
   // avoid compiler warnings
   return(0);
   
-} // bsl_flashErase
+} // bsl_flashSectorErase
+
+
+
+/**
+  \fn uint8_t bsl_flashMassErase(HANDLE ptrPort)
+   
+  \brief mass erase microcontroller flash
+  
+  \param[in] ptrPort      handle to communication port
+  
+  \return communication status (0=ok, 1=fail)
+  
+  mass erase microcontroller P-flash and D-flash/EEPROM
+*/
+uint8_t bsl_flashMassErase(HANDLE ptrPort) {
+
+  int       i, lenTx, lenRx, len;
+  char      Tx[1000], Rx[1000];
+
+
+  // print message
+  printf("  mass erase flash ... ");
+  fflush(stdout);
+  
+  // init receive buffer
+  for (i=0; i<1000; i++)
+    Rx[i] = 0;
+
+  // check if port is open
+  if (!ptrPort) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': port not open, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+  
+
+  /////
+  // send erase command
+  /////
+  
+  // construct command
+  lenTx = 2;
+  Tx[0] = ERASE;
+  Tx[1] = (Tx[0] ^ 0xFF);
+  lenRx = 1;
+  
+  // send command
+  len = send_port(ptrPort, lenTx, Tx);
+  if (len != lenTx) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': sending command failed, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+
+  // receive response with timeout
+  len = receive_port(ptrPort, lenRx, Rx);
+  if (len != lenRx) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': ACK1 timeout, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+  
+  // check acknowledge
+  if (Rx[0]!=ACK) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': ACK1 failure, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+
+  
+  /////
+  // send 0xFF+0x00 to trigger mass erase
+  /////
+
+  // construct pattern
+  lenTx = 2;
+  Tx[0] = 0xFF;
+  Tx[1] = 0x00;
+  lenRx = 1;
+
+  // send command
+  len = send_port(ptrPort, lenTx, Tx);
+  if (len != lenTx) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': sending trigger failed, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+
+  
+  // wait for erase to avoid communication timeout
+  //SLEEP(10000);
+  
+  // mass erase takes longer -> increase timeout
+  set_timeout(ptrPort, 5000);
+  
+  // receive response with timeout
+  len = receive_port(ptrPort, lenRx, Rx);
+  if (len != lenRx) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': ACK2 timeout, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+  
+  // check acknowledge
+  if (Rx[0]!=ACK) {
+    setConsoleColor(PRM_COLOR_RED);
+    fprintf(stderr, "\n\nerror in 'bsl_flashMassErase()': ACK2 failure, exit!\n\n");
+    Exit(1, g_pauseOnExit);
+  }
+
+  // restore timeout
+  set_timeout(ptrPort, 1000);
+
+    
+  // print message
+  printf("ok\n");
+  fflush(stdout);
+  
+  // avoid compiler warnings
+  return(0);
+
+} // bsl_flashMassErase
 
 
 
