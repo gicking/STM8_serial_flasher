@@ -260,7 +260,7 @@ int main(int argc, char ** argv) {
         appname = argv[0];
       printf("\n");
 
-      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-R ch] [-w infile] [-x] [-v] [-r start stop outfile] [-j] [-Q] [-q] [-V]\n", appname);
+      printf("usage: %s [-h] [-p port] [-b rate] [-u mode] [-R ch] [-e] [-w infile] [-x] [-v] [-r start stop outfile] [-j] [-Q] [-q] [-V]\n", appname);
       printf("  -h                     print this help\n");
       printf("  -p port                name of communication port (default: list available ports)\n");
       printf("  -b rate                communication baudrate in Baud (default: 230400)\n");
