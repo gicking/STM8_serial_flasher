@@ -23,15 +23,15 @@ v1.1.2 (2016-05-25)
   - add optional flash mass erase prior to upload
 
 ----------------
-1.1.1 (2016-02-03):
+v1.1.1 (2016-02-03):
   - add support for STM8L family (skip RAM code upload)
   - add memory dump to file
 
 ----------------
-1.1.0 (2015-06-22):
+v1.1.0 (2015-06-22):
   - add support for STM8 bootloader “reply mode“
   - add optional reset of STM8 via DTR (RS232/USB) or GPIO18 (Raspberry)
 
 ----------------
-1.0.0 (2014-12-21):
+v1.0.0 (2014-12-21):
   - initial release by Georg Icking-Konert under the Apache License 2.0
