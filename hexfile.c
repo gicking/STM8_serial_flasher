@@ -355,7 +355,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
   uint8_t   type, len, chkRead, chkCalc;
-  uint32_t  addr, addrMin, addrMax, addrOff, val;
+  uint32_t  addr, addrMin, addrMax, addrOff, addrStart, val;
   
   // print message (if present, strip path)
   /*
@@ -427,8 +427,23 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
       chkCalc += (uint8_t)  val;
       addrOff = val << 16;
     } // type==4
+    
+    // start linear address records. Can be ignored, see http://www.keil.com/support/docs/1584/
+    else if (type==5) {
+      sprintf(tmp,"0x00000000");
+      strncpy(tmp+2, line+9, 8);      // get next 8 chars as string
+      sscanf(tmp, "%x", &val);        // interpret as hex data
+      chkCalc += (uint8_t) (val >> 24);
+      chkCalc += (uint8_t) (val >> 16);
+      chkCalc += (uint8_t) (val >> 8);
+      chkCalc += (uint8_t)  val;
+      addrStart = val;
+    } // type==5
+    
+    // unsupported record type -> error
     else
       Error("Line %d of Intel hex file has unsupported type %d", linecount, type);
+    
     
     // checksum
     sprintf(tmp,"0x00");
