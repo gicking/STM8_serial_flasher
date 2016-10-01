@@ -355,7 +355,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
   char      line[1000], tmp[1000], *p;
   int       linecount, idx, i;
   uint8_t   type, len, chkRead, chkCalc;
-  uint32_t  addr, addrMin, addrMax, addrOff, addrStart, val;
+  uint32_t  addr, addrMin, addrMax, addrOff, addrJumpStart, val;
   
   // print message (if present, strip path)
   /*
@@ -437,7 +437,7 @@ void convert_hex(char *buf, uint32_t *addrStart, uint32_t *numBytes, char *image
       chkCalc += (uint8_t) (val >> 16);
       chkCalc += (uint8_t) (val >> 8);
       chkCalc += (uint8_t)  val;
-      addrStart = val;
+      addrJumpStart = val;            // not used yet
     } // type==5
     
     // unsupported record type -> error
