@@ -351,6 +351,9 @@ int main(int argc, char ** argv) {
     fflush(stdout);
   }
   
+  // flush receive buffer
+  flush_port(ptrPort);
+
  
   // debug: communication test (echo+1 test-SW on STM8)
   /*
