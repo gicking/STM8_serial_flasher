@@ -1,4 +1,3 @@
-test 5
 /**
    \file main.c
 
